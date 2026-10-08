@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "dcelysion-home",
+  "compatibility_date": "2026-10-08",
+  "assets": {
+    "directory": "./dist"
+  },
+  "routes": [
+    {
+      "pattern": "home.dcelysion.cn",
+      "custom_domain": true
+    }
+  ]
+}

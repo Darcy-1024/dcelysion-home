@@ -1,0 +1,167 @@
+{
+  "profile": {
+    "name": "东方未晞",
+    "bio": "唯有那份炫目，未曾忘却",
+    "avatar": "/assets/blog/profile/asuka.jpg"
+  },
+  "socials": [
+    {
+      "name": "QQ",
+      "icon": "fa7-brands:qq",
+      "url": "https://qm.qq.com/q/Nql06wlskw"
+    },
+    {
+      "name": "Email",
+      "icon": "fa7-solid:envelope",
+      "encodedEmail": "bGluNTA3NzkzNDY1QGdtYWlsLmNvbQ=="
+    },
+    {
+      "name": "Bilibili",
+      "icon": "fa7-brands:bilibili",
+      "url": "https://space.bilibili.com/83533320"
+    }
+  ],
+  "blogUrl": "https://blog.dcelysion.cn/",
+  "logo": "/assets/brand/dcelysion-portal-v3-dark.png",
+  "defaultWallpaper": {
+    "desktop": { "video": "https://wallpapers.dcelysion.cn/desktop/elysia-gate-2560x1344.mp4", "poster": "/assets/wallpapers/elysia-desktop.webp" },
+    "mobile": { "video": "https://wallpapers.dcelysion.cn/mobile/elysia-gate-952x1344.mp4", "poster": "/assets/wallpapers/elysia-mobile.webp" }
+  },
+  "wallpapers": {
+    "desktop": [
+      "/assets/blog/DesktopWallpaper/d8.avif",
+      "/assets/blog/DesktopWallpaper/d9.avif",
+      "/assets/blog/DesktopWallpaper/d10.avif",
+      "/assets/blog/DesktopWallpaper/d11.avif",
+      "/assets/blog/DesktopWallpaper/d12.avif",
+      "/assets/blog/DesktopWallpaper/d13.avif",
+      "/assets/blog/DesktopWallpaper/d14.avif",
+      "/assets/blog/DesktopWallpaper/d15.avif",
+      "/assets/blog/DesktopWallpaper/d16.avif",
+      "/assets/blog/DesktopWallpaper/d17.avif",
+      "/assets/blog/DesktopWallpaper/d18.avif",
+      "/assets/blog/DesktopWallpaper/d19.avif",
+      "/assets/blog/DesktopWallpaper/d20.avif",
+      "/assets/blog/DesktopWallpaper/d21.avif",
+      "/assets/blog/DesktopWallpaper/d22.avif",
+      "/assets/blog/DesktopWallpaper/d23.avif",
+      "/assets/blog/DesktopWallpaper/d24.avif",
+      "/assets/blog/DesktopWallpaper/d25.avif",
+      "/assets/blog/DesktopWallpaper/d26.avif",
+      "/assets/blog/DesktopWallpaper/d27.avif",
+      "/assets/blog/DesktopWallpaper/d28.avif",
+      "/assets/blog/DesktopWallpaper/d29.avif",
+      "/assets/blog/DesktopWallpaper/d30.avif",
+      "/assets/blog/DesktopWallpaper/d31.avif",
+      "/assets/blog/DesktopWallpaper/d32.avif",
+      "/assets/blog/DesktopWallpaper/d33.avif",
+      "/assets/blog/DesktopWallpaper/d34.avif",
+      "/assets/blog/DesktopWallpaper/d35.avif",
+      "/assets/blog/DesktopWallpaper/d36.avif",
+      "/assets/blog/DesktopWallpaper/d37.avif",
+      "/assets/blog/DesktopWallpaper/d38.avif",
+      "/assets/blog/DesktopWallpaper/d39.avif"
+    ],
+    "mobile": [
+      "/assets/blog/MobileWallpaper/m7.avif",
+      "/assets/blog/MobileWallpaper/m8.avif",
+      "/assets/blog/MobileWallpaper/m9.avif",
+      "/assets/blog/MobileWallpaper/m10.avif",
+      "/assets/blog/MobileWallpaper/m11.avif",
+      "/assets/blog/MobileWallpaper/m12.avif",
+      "/assets/blog/MobileWallpaper/m13.avif",
+      "/assets/blog/MobileWallpaper/m14.avif",
+      "/assets/blog/MobileWallpaper/m15.avif",
+      "/assets/blog/MobileWallpaper/m16.avif",
+      "/assets/blog/MobileWallpaper/m17.avif",
+      "/assets/blog/MobileWallpaper/m18.avif",
+      "/assets/blog/MobileWallpaper/m19.avif",
+      "/assets/blog/MobileWallpaper/m20.avif",
+      "/assets/blog/MobileWallpaper/m21.avif",
+      "/assets/blog/MobileWallpaper/m22.avif",
+      "/assets/blog/MobileWallpaper/m23.avif",
+      "/assets/blog/MobileWallpaper/m24.avif",
+      "/assets/blog/MobileWallpaper/m25.avif",
+      "/assets/blog/MobileWallpaper/m26.avif",
+      "/assets/blog/MobileWallpaper/m27.avif",
+      "/assets/blog/MobileWallpaper/m29.avif",
+      "/assets/blog/MobileWallpaper/m30.avif",
+      "/assets/blog/MobileWallpaper/m31.avif"
+    ]
+  },
+  "tracks": [
+    {
+      "id": "track-1",
+      "name": "羽根",
+      "artist": " 折戸伸治/Key ",
+      "url": "https://music.dcelysion.cn/tracks/hane-orito-shinji-8f927736.flac",
+      "cover": "https://music.dcelysion.cn/covers/hane-c245b3c0.avif",
+      "lrc": "[00:00.00]纯音乐"
+    },
+    {
+      "id": "track-2",
+      "name": "東方萃夢想",
+      "artist": "TAMUSIC",
+      "url": "https://music.dcelysion.cn/tracks/touhou-suimusou-0210439d.flac",
+      "cover": "https://music.dcelysion.cn/covers/touhou-suimusou-c104f7fe.avif",
+      "lrc": "[00:00.00]纯音乐"
+    },
+    {
+      "id": "track-3",
+      "name": "久遠寺有珠",
+      "artist": "深澤秀行",
+      "url": "https://music.dcelysion.cn/tracks/kuonji-alice-4a7394d7.flac",
+      "cover": "https://music.dcelysion.cn/covers/mahoutsukai-no-yoru-82612496.avif",
+      "lrc": "[00:00.00]纯音乐"
+    },
+    {
+      "id": "track-4",
+      "name": "魔法使いの夜～メインテーマ",
+      "artist": "深澤秀行",
+      "url": "https://music.dcelysion.cn/tracks/mahoutsukai-no-yoru-main-theme-fcb1095c.flac",
+      "cover": "https://music.dcelysion.cn/covers/mahoutsukai-no-yoru-82612496.avif",
+      "lrc": "[00:00.00]纯音乐"
+    },
+    {
+      "id": "track-5",
+      "name": "午後の眠り",
+      "artist": "深澤秀行",
+      "url": "https://music.dcelysion.cn/tracks/gogo-no-nemuri-a8185375.flac",
+      "cover": "https://music.dcelysion.cn/covers/mahoutsukai-no-yoru-82612496.avif",
+      "lrc": "[00:00.00]纯音乐"
+    },
+    {
+      "id": "track-6",
+      "name": "nostalgia",
+      "artist": "深澤秀行",
+      "url": "https://music.dcelysion.cn/tracks/nostalgia-e5518847.flac",
+      "cover": "https://music.dcelysion.cn/covers/mahoutsukai-no-yoru-82612496.avif",
+      "lrc": "[00:00.00]纯音乐"
+    },
+    {
+      "id": "track-7",
+      "name": "孤独な巡礼",
+      "artist": "川井憲次",
+      "url": "https://music.dcelysion.cn/tracks/kodoku-na-junrei-a4603f1e1202.flac",
+      "cover": "https://music.dcelysion.cn/covers/kodoku-na-junrei-6bd1e927.jpg",
+      "lrc": "[00:00.00]纯音乐"
+    },
+    {
+      "id": "track-8",
+      "name": "夜诞的花冠 Night's Crown of Flowers",
+      "artist": "HOYO-MiX",
+      "url": "https://music.dcelysion.cn/tracks/nights-crown-of-flowers-9b033bee4c19.flac",
+      "cover": "https://music.dcelysion.cn/covers/nights-crown-of-flowers-e6d348b6.webp",
+      "lrc": "[00:00.00]纯音乐"
+    },
+    {
+      "id": "track-9",
+      "name": "Kanon D-dur",
+      "artist": "Württembergisches Kammerorch.",
+      "url": "https://music.dcelysion.cn/tracks/kanon-d-dur-d688ec887b24.flac",
+      "cover": "https://music.dcelysion.cn/covers/kanon-eeb5186e.avif",
+      "lrc": "[00:00.00]纯音乐"
+    }
+  ],
+  "accentHue": 308
+}

@@ -1,0 +1,30 @@
+{
+  "name": "dcelysion-home",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.22.0",
+  "scripts": {
+    "dev": "astro dev --host 127.0.0.1",
+    "build": "astro build",
+    "deploy": "pnpm build && wrangler deploy",
+    "preview": "astro preview --host 127.0.0.1",
+    "check": "astro check",
+    "test": "node --import tsx --test src/lib/*.test.ts",
+    "sync:blog": "tsx scripts/sync-blog.ts"
+  },
+  "dependencies": {
+    "@astrojs/svelte": "9.0.1",
+    "@iconify-json/fa7-brands": "1.2.4",
+    "@iconify-json/fa7-solid": "1.2.5",
+    "astro": "7.3.2",
+    "svelte": "5.57.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "@types/node": "26.4.1",
+    "tsx": "4.23.13",
+    "typescript": "6.0.3",
+    "wrangler": "4.127.1"
+  }
+}

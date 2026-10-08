@@ -1,0 +1,31 @@
+---
+import Home from '../components/Home.svelte';
+import home from '../data/home.json';
+import brands from '@iconify-json/fa7-brands/icons.json';
+import solid from '@iconify-json/fa7-solid/icons.json';
+import type { IconData } from '../lib/home';
+import '../styles/global.css';
+
+const icons: Record<string, IconData> = {};
+for (const link of home.socials) {
+  const [set, key] = link.icon.split(':');
+  const collection = set === 'fa7-brands' ? brands : solid;
+  const icon = (collection.icons as Record<string, { body: string; width?: number; height?: number }>)[key];
+  if (icon) icons[link.icon] = { body: icon.body, width: icon.width ?? collection.width, height: icon.height ?? collection.height };
+}
+---
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content={`${home.profile.name} 的个人主页 · ${home.profile.bio}`} />
+    <meta name="theme-color" content="#171420" />
+    <link rel="icon" href="/favicon.png" type="image/png" />
+    <title>{home.profile.name}の主页</title>
+  </head>
+  <body>
+    <Home client:load data={home} {icons} />
+    <noscript><p class="noscript-note">天气、音乐、邮箱与随机壁纸需要启用 JavaScript。QQ、B站和博客入口仍可使用。</p></noscript>
+  </body>
+</html>
