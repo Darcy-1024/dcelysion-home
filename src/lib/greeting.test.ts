@@ -1,23 +1,17 @@
 import assert from 'node:assert/strict';
 import { afterEach, test } from 'node:test';
-import { GreetingClock, greetingAt, validTimezone, fetchIpTimezone, readTimezoneCache, writeTimezoneCache, TIMEZONE_CACHE_KEY, TIMEZONE_CACHE_TTL, type Greeting } from './greeting.ts';
+import { GreetingClock, greetingAt, type Greeting } from './greeting.ts';
 
+const originalTimezone = process.env.TZ;
 const originalFetch = globalThis.fetch;
 const originalStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
 afterEach(() => {
+  if (originalTimezone === undefined) delete process.env.TZ;
+  else process.env.TZ = originalTimezone;
   globalThis.fetch = originalFetch;
   if (originalStorage) Object.defineProperty(globalThis, 'localStorage', originalStorage);
   else Reflect.deleteProperty(globalThis, 'localStorage');
 });
-function storage() {
-  const values = new Map<string, string>();
-  Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: {
-    getItem: (key: string) => values.get(key) ?? null,
-    setItem: (key: string, value: string) => values.set(key, value),
-  } });
-  return values;
-}
-const settle = async () => { for (let i = 0; i < 12; i++) await Promise.resolve(); };
 
 test('all six greeting ranges include exact minute boundaries and midnight', () => {
   for (const [time, text] of [
@@ -39,105 +33,44 @@ test('one instant uses each timezone and summer time rules, including DST jumps'
   assert.equal(greetingAt(new Date('2026-11-01T06:00:00Z'), 'America/New_York').time, '01:00');
 });
 
-test('timezone endpoint requests only timezone and validates plain text and errors', async () => {
-  globalThis.fetch = async (input) => { assert.equal(input, 'https://ipapi.co/timezone/'); return new Response('Asia/Shanghai\n'); };
-  assert.equal(await fetchIpTimezone(), 'Asia/Shanghai');
-  for (const invalid of ['', 'not-a-zone', '{"error":true}', 'GMT+8']) {
-    globalThis.fetch = async () => new Response(invalid);
-    await assert.rejects(fetchIpTimezone(), /时区数据格式异常/);
-  }
-  globalThis.fetch = async () => new Response('', { status: 429 });
-  await assert.rejects(fetchIpTimezone(), /时区服务暂时不可用/);
-  assert.equal(validTimezone(null), false);
-});
-
-test('cache expires after thirty minutes, rejects corrupt or future entries, stores no IP', () => {
-  const values = storage();
-  writeTimezoneCache('Asia/Shanghai', 1000);
-  assert.deepEqual(JSON.parse(values.get(TIMEZONE_CACHE_KEY)!), { timezone: 'Asia/Shanghai', savedAt: 1000 });
-  assert.equal(readTimezoneCache(1000 + TIMEZONE_CACHE_TTL - 1)?.timezone, 'Asia/Shanghai');
-  assert.equal(readTimezoneCache(1000 + TIMEZONE_CACHE_TTL), null);
-  assert.equal(readTimezoneCache(999), null);
-  for (const value of ['broken', '{}', '{"timezone":"bad","savedAt":1000}', '{"timezone":"UTC","savedAt":"1000"}']) {
-    values.set(TIMEZONE_CACHE_KEY, value); assert.equal(readTimezoneCache(1001), null);
-  }
-});
-
-test('disabled storage still permits fetching and harmless cache calls', async () => {
-  Object.defineProperty(globalThis, 'localStorage', { configurable: true, get() { throw new Error('disabled'); } });
-  assert.equal(readTimezoneCache(), null);
-  assert.doesNotThrow(() => writeTimezoneCache('UTC'));
-  globalThis.fetch = async () => new Response('UTC');
-  assert.equal(await fetchIpTimezone(), 'UTC');
-});
-
-function abortingFetch(): typeof fetch {
-  return async (_input, options) => new Promise((_resolve, reject) => {
-    const abort = () => reject(new DOMException('Aborted', 'AbortError'));
-    if (options?.signal?.aborted) abort();
-    else options?.signal?.addEventListener('abort', abort, { once: true });
-  });
-}
-
-test('timeout and external cancellation abort pending requests', async (context) => {
-  context.mock.timers.enable({ apis: ['setTimeout'] });
-  globalThis.fetch = abortingFetch();
-  const pending = assert.rejects(fetchIpTimezone(), /Aborted/);
-  context.mock.timers.tick(8000); await pending;
-  const controller = new AbortController();
-  const canceled = assert.rejects(fetchIpTimezone(controller.signal), /Aborted/);
-  controller.abort(); await canceled;
-  await assert.rejects(fetchIpTimezone(controller.signal), /Aborted/);
-});
-
-test('clock updates each minute without network, refreshes expired cache on resume, prevents concurrent requests', async (context) => {
-  context.mock.timers.enable({ apis: ['Date', 'setInterval', 'setTimeout'], now: 10_000_000 });
-  storage(); writeTimezoneCache('UTC');
+test('Guangzhou device time ignores a proxy timezone and old IP cache without network', (context) => {
+  context.mock.timers.enable({ apis: ['Date', 'setInterval'], now: Date.parse('2026-10-08T11:13:00Z') });
+  process.env.TZ = 'Asia/Shanghai';
   let requests = 0;
-  let resolve!: (value: Response) => void;
-  globalThis.fetch = async () => { requests++; return new Promise((done) => { resolve = done; }); };
+  globalThis.fetch = async () => { requests++; return new Response('America/Los_Angeles'); };
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: {
+    getItem: () => JSON.stringify({ timezone: 'America/Los_Angeles', savedAt: Date.now() }),
+  } });
   const updates: Greeting[] = [];
   const clock = new GreetingClock((value) => updates.push(value));
-  clock.start(); await settle(); assert.equal(requests, 0);
-  context.mock.timers.tick(TIMEZONE_CACHE_TTL); assert.equal(requests, 0);
-  assert.ok(updates.length >= 31);
-  clock.resume(); clock.resume(); assert.equal(requests, 1);
-  resolve(new Response('Asia/Shanghai')); await settle();
-  assert.equal(updates.at(-1)?.source, 'ip');
-  assert.deepEqual(updates.at(-1), { ...greetingAt(new Date(), 'Asia/Shanghai'), source: 'ip' });
-  clock.stop();
-  const count = updates.length;
-  context.mock.timers.tick(60000); clock.resume(); assert.equal(updates.length, count);
+  try {
+    clock.start();
+    assert.deepEqual(updates.at(-1), { text: '晚上好', time: '19:13', source: 'device' });
+    context.mock.timers.tick(60000);
+    assert.equal(updates.at(-1)?.time, '19:14');
+    assert.equal(requests, 0);
+    clock.stop();
+    const count = updates.length;
+    context.mock.timers.tick(60000); clock.resume();
+    assert.equal(updates.length, count);
+  } finally { clock.stop(); }
 });
 
-test('failed fetch uses device time; stopping ignores even a late response', async () => {
-  storage();
-  globalThis.fetch = async () => { throw new TypeError('network'); };
+test('resume updates immediately and picks up changes to the device timezone', (context) => {
+  context.mock.timers.enable({ apis: ['Date', 'setInterval'], now: Date.parse('2026-10-08T11:13:00Z') });
+  process.env.TZ = 'Asia/Shanghai';
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, get() { throw new Error('disabled'); } });
   const updates: Greeting[] = [];
   const clock = new GreetingClock((value) => updates.push(value));
-  clock.start(); await settle();
-  assert.deepEqual(updates.at(-1), { ...greetingAt(new Date(), Intl.DateTimeFormat().resolvedOptions().timeZone), source: 'device' });
-  clock.stop();
-  let resolve!: (value: Response) => void;
-  globalThis.fetch = async () => new Promise((done) => { resolve = done; });
-  const lateUpdates: Greeting[] = [];
-  const canceledClock = new GreetingClock((value) => lateUpdates.push(value));
-  canceledClock.start(); canceledClock.stop();
-  resolve(new Response('Asia/Shanghai')); await settle();
-  assert.equal(lateUpdates.length, 1);
-  assert.equal(readTimezoneCache(), null);
-});
-
-test('expired IP cache falls back to device time after a failed visibility refresh', async (context) => {
-  context.mock.timers.enable({ apis: ['Date', 'setInterval', 'setTimeout'], now: 10_000_000 });
-  storage(); writeTimezoneCache('America/New_York');
-  globalThis.fetch = async () => { throw new TypeError('network'); };
-  const updates: Greeting[] = [];
-  const clock = new GreetingClock((value) => updates.push(value));
-  clock.start();
-  assert.equal(updates.at(-1)?.source, 'ip');
-  context.mock.timers.tick(TIMEZONE_CACHE_TTL);
-  clock.resume(); await settle();
-  assert.deepEqual(updates.at(-1), { ...greetingAt(new Date(), Intl.DateTimeFormat().resolvedOptions().timeZone), source: 'device' });
-  clock.stop();
+  try {
+    clock.start();
+    context.mock.timers.tick(30000);
+    process.env.TZ = 'America/Los_Angeles';
+    clock.resume();
+    assert.deepEqual(updates.at(-1), { text: '晚上好', time: '04:13', source: 'device' });
+    clock.start();
+    const count = updates.length;
+    context.mock.timers.tick(60000);
+    assert.equal(updates.length, count + 1);
+  } finally { clock.stop(); }
 });

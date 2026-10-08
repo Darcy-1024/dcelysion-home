@@ -249,7 +249,7 @@
       <div class="panel-heading"><div><p class="panel-eyebrow">{activePanel === 'weather' ? 'A LITTLE FORECAST' : 'SOUNDTRACK OF THE MOMENT'}</p><h2 id="panel-title">{activePanel === 'weather' ? '此刻的天气' : '音乐时光'}</h2></div><button class="icon-button close-button" onclick={closePanel} aria-label="关闭面板"><Icon name="close" /></button></div>
 
       {#if activePanel === 'weather'}
-        <div class="greeting-overview"><strong>{greeting.text}</strong>{#if greeting.time}<span>{greeting.time}<small>{greeting.source === 'ip' ? 'IP 所在地时间' : '设备时间'}</small></span>{/if}</div>
+        <div class="greeting-overview"><strong>{greeting.text}</strong>{#if greeting.time}<span>{greeting.time}<small>设备时间</small></span>{/if}</div>
         <div class="weather-overview" aria-live="polite">
           {#if weather}
             <div class="weather-location"><Icon name="pin" size={15} /><span>{weather.city}</span>{#if selectedCity}<small>手动选择</small>{/if}</div>
