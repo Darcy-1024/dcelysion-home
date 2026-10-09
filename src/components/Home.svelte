@@ -4,7 +4,8 @@
   import Icon from './Icon.svelte';
   import type { HomeData, IconData, Social } from '../lib/home';
   import { CACHE_TTL, fetchWeather, readWeatherCache, writeWeatherCache, readSelectedCity, saveSelectedCity, weatherSymbol, type Weather } from '../lib/weather';
-  import { getMusicPlayer, type MusicPlayer, type MusicState } from '../lib/music';
+  import type { MusicPlayer, MusicState } from '../lib/music';
+  import { afterLoadIdle, backgroundAllowed, WallpaperCandidate, attachVideo } from '../lib/media';
   import { GreetingClock, type Greeting } from '../lib/greeting';
 
   let { data, icons }: { data: HomeData; icons: Record<string, IconData> } = $props();
@@ -18,6 +19,18 @@
   let mobileWallpaper = $state(false);
   let mounted = $state(false);
   let videoFailed = $state(false);
+  let videoPlaying = $state(false);
+  let saveData = $state(false);
+  let pageVisible = $state(true);
+  let videoStarted = $state(false);
+  let videoController: ReturnType<typeof attachVideo> | undefined;
+  const wallpaperCandidate = new WallpaperCandidate();
+  let cancelWallpaperIdle = () => {};
+  let cancelMusicIdle = () => {};
+  let unsubscribeMusic = () => {};
+  let musicPromise: Promise<void> | undefined;
+  let musicLoading = $state(false);
+  let musicError = $state('');
   const defaultWallpaper = $derived(mobileWallpaper ? data.defaultWallpaper.mobile : data.defaultWallpaper.desktop);
   let previousWallpaper = $state('');
   let wallpaperBusy = $state(false);
@@ -33,11 +46,57 @@
   let weatherController: AbortController | undefined;
   let weatherVersion = 0;
   let greeting = $state<Greeting>({ text: '你好', time: '', source: 'device' });
-  let player: MusicPlayer | undefined;
+  let player = $state<MusicPlayer | undefined>();
   let music = $state<MusicState | null>(null);
   let showPlaylist = $state(false);
   const track = $derived(music?.track ?? data.tracks[0]);
   const modeLabel = $derived(music?.mode === 'one' ? '单曲循环' : music?.mode === 'random' ? '随机播放' : '列表循环');
+
+  function scheduleWallpaper() {
+    cancelWallpaperIdle();
+    if (!alive || !backgroundAllowed() || (defaultWallpaperActive && !videoFailed && !reducedMotion && !videoPlaying)) return;
+    cancelWallpaperIdle = afterLoadIdle(() => {
+      if (alive && backgroundAllowed() && (!defaultWallpaperActive || videoFailed || reducedMotion || videoPlaying)) wallpaperCandidate.prepare(wallpaperList, currentWallpaper);
+    });
+  }
+
+  function videoAction(node: HTMLVideoElement) {
+    videoStarted = true;
+    videoPlaying = false;
+    const controller = attachVideo(node, playing => {
+      videoPlaying = playing;
+      if (playing) scheduleWallpaper(); else cancelWallpaperIdle();
+    }, () => { videoFailed = true; videoPlaying = false; scheduleWallpaper(); }, () => alive && pageVisible && !saveData && !reducedMotion && defaultWallpaperActive);
+    videoController = controller;
+    return { destroy() { controller.destroy(); if (videoController === controller) videoController = undefined; } };
+  }
+
+  function ensureMusicPlayer(): Promise<void> {
+    if (player) return Promise.resolve();
+    if (musicPromise) return musicPromise;
+    musicLoading = true;
+    musicError = '';
+    musicPromise = import('../lib/music').then(({ getMusicPlayer }) => {
+      if (!alive) return;
+      player = getMusicPlayer(data.tracks);
+      player.resumeBackground();
+      unsubscribeMusic = player.subscribe(state => { music = state; });
+      if (backgroundAllowed()) player.preloadFirstTrack();
+    }).catch(() => {
+      if (alive) musicError = '播放器加载失败，请重试';
+      musicPromise = undefined;
+    }).finally(() => { if (alive) musicLoading = false; });
+    return musicPromise;
+  }
+
+  function scheduleMusic() {
+    cancelMusicIdle();
+    if (!alive || !backgroundAllowed()) return;
+    cancelMusicIdle = afterLoadIdle(() => {
+      if (!alive || !backgroundAllowed()) return;
+      void ensureMusicPlayer().then(() => { if (alive && backgroundAllowed()) player?.preloadFirstTrack(); });
+    });
+  }
 
   function formatTime(seconds: number) {
     if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
@@ -47,6 +106,7 @@
   async function openPanel(kind: 'weather' | 'music', event: MouseEvent) {
     returnFocus = event.currentTarget as HTMLElement;
     activePanel = kind;
+    if (kind === 'music') { cancelMusicIdle(); void ensureMusicPlayer(); }
     await tick();
     panelElement?.querySelector<HTMLButtonElement>('button')?.focus();
   }
@@ -70,25 +130,20 @@
 
   async function changeWallpaper() {
     if (wallpaperBusy || !wallpaperList.length) return;
-    const candidates = wallpaperList.filter((src) => src !== currentWallpaper);
-    if (!candidates.length && currentWallpaper) return;
-    const next = candidates[Math.floor(Math.random() * candidates.length)] ?? wallpaperList[0];
+    const candidate = wallpaperCandidate.take(wallpaperList, currentWallpaper);
+    if (!candidate) return;
     const version = ++wallpaperVersion;
     wallpaperBusy = true;
     wallpaperNotice = '';
+    cancelWallpaperIdle();
     try {
-      await new Promise<void>((resolve, reject) => {
-        const img = new Image();
-        const finish = (error?: Error) => { clearTimeout(timeout); img.onload = null; img.onerror = null; error ? reject(error) : resolve(); };
-        const timeout = setTimeout(() => finish(new Error('timeout')), 10000);
-        img.onload = () => { void img.decode().then(() => finish(), () => finish(new Error('decode'))); };
-        img.onerror = () => finish(new Error('load'));
-        img.src = next;
-      });
+      await candidate.ready;
       if (!alive || version !== wallpaperVersion) return;
       previousWallpaper = currentWallpaper;
-      currentWallpaper = next;
+      currentWallpaper = candidate.url;
       defaultWallpaperActive = false;
+      wallpaperCandidate.clear();
+      scheduleWallpaper();
     } catch {
       if (alive && version === wallpaperVersion) wallpaperNotice = '这张壁纸暂时加载不了，再试一次吧';
     } finally {
@@ -133,27 +188,41 @@
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const mobile = window.matchMedia('(max-width: 640px)');
     reducedMotion = motion.matches;
-    let typeTimer: ReturnType<typeof setInterval> | undefined;
-    if (!reducedMotion) {
-      const letters = Array.from(data.profile.bio);
+    let typeTimer: ReturnType<typeof setTimeout> | undefined;
+    const letters = Array.from(new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(data.profile.bio), ({ segment }) => segment);
+    const startTyping = () => {
+      clearTimeout(typeTimer);
+      if (reducedMotion || !letters.length) { typedBio = data.profile.bio; return; }
       let index = 0;
+      let deleting = false;
       typedBio = '';
-      typeTimer = setInterval(() => {
-        typedBio = letters.slice(0, ++index).join('');
-        if (index >= letters.length) clearInterval(typeTimer);
-      }, 100);
-    }
-    const onMotion = () => { reducedMotion = motion.matches; if (reducedMotion) { clearInterval(typeTimer); typedBio = data.profile.bio; } };
+      const step = () => {
+        index += deleting ? -1 : 1;
+        typedBio = letters.slice(0, index).join('');
+        let delay = deleting ? 50 : 150;
+        if (index === letters.length) { deleting = true; delay = 8000; }
+        else if (index === 0) { deleting = false; delay = 150; }
+        typeTimer = setTimeout(step, delay);
+      };
+      typeTimer = setTimeout(step, 150);
+    };
+    startTyping();
+    const onMotion = () => { reducedMotion = motion.matches; if (!pageVisible) videoStarted = false; startTyping(); scheduleWallpaper(); };
     const setWallpapers = () => {
       mobileWallpaper = mobile.matches;
       wallpaperList = mobile.matches ? data.wallpapers.mobile : data.wallpapers.desktop;
       wallpaperVersion++;
+      wallpaperCandidate.clear();
+      cancelWallpaperIdle();
+      videoPlaying = false;
+      if (!pageVisible) videoStarted = false;
       wallpaperBusy = false;
       if (defaultWallpaperActive) {
         currentWallpaper = mobile.matches ? data.defaultWallpaper.mobile.poster : data.defaultWallpaper.desktop.poster;
         previousWallpaper = '';
         videoFailed = false;
       } else void changeWallpaper();
+      scheduleWallpaper();
     };
     motion.addEventListener('change', onMotion);
     mobile.addEventListener('change', setWallpapers);
@@ -161,10 +230,19 @@
     void loadWeather(readSelectedCity());
     const greetingClock = new GreetingClock((value) => { greeting = value; });
     greetingClock.start();
-    player = getMusicPlayer(data.tracks);
-    const unsubscribe = player.subscribe((state) => { music = state; });
+    const connection = (navigator as Navigator & { connection?: EventTarget & { saveData?: boolean } }).connection;
+    const onConnection = () => { saveData = connection?.saveData === true; if (!pageVisible) videoStarted = false; scheduleWallpaper(); scheduleMusic(); };
+    saveData = connection?.saveData === true;
+    pageVisible = document.visibilityState === 'visible';
+    connection?.addEventListener('change', onConnection);
+    scheduleMusic();
     const onVisible = () => {
-      if (document.visibilityState === 'visible') { void loadWeather(selectedCity); greetingClock.resume(); }
+      pageVisible = document.visibilityState === 'visible';
+      if (pageVisible) {
+        videoController?.resume();
+        void loadWeather(selectedCity); greetingClock.resume();
+        scheduleWallpaper(); scheduleMusic();
+      } else { videoController?.pause(); cancelWallpaperIdle(); cancelMusicIdle(); }
     };
     document.addEventListener('visibilitychange', onVisible);
     return () => {
@@ -173,8 +251,11 @@
       weatherVersion++;
       weatherController?.abort();
       greetingClock.stop();
-      clearInterval(typeTimer);
-      unsubscribe();
+      clearTimeout(typeTimer);
+      unsubscribeMusic();
+      player?.suspendBackground();
+      cancelWallpaperIdle(); cancelMusicIdle(); wallpaperCandidate.clear();
+      connection?.removeEventListener('change', onConnection);
       motion.removeEventListener('change', onMotion);
       mobile.removeEventListener('change', setWallpapers);
       document.removeEventListener('visibilitychange', onVisible);
@@ -187,12 +268,14 @@
 <div class="home" style={`--accent-hue: ${data.accentHue}`}>
   <div class="wallpaper" aria-hidden="true">
     {#if previousWallpaper}<img class="wallpaper-image" src={previousWallpaper} alt="" />{/if}
-    {#key currentWallpaper}
-      {#if currentWallpaper}<img class="wallpaper-image" src={currentWallpaper} alt="" in:fade={{ duration: reducedMotion ? 0 : 650 }} />{/if}
-    {/key}
-    {#if mounted && defaultWallpaperActive && !reducedMotion && !videoFailed}
+    {#if defaultWallpaperActive}
+      <picture><source media="(max-width: 640px)" srcset={data.defaultWallpaper.mobile.poster} /><img class="wallpaper-image" src={data.defaultWallpaper.desktop.poster} alt="" fetchpriority="high" /></picture>
+    {:else}
+      {#key currentWallpaper}<img class="wallpaper-image" src={currentWallpaper} alt="" in:fade={{ duration: reducedMotion ? 0 : 650 }} />{/key}
+    {/if}
+    {#if mounted && defaultWallpaperActive && !reducedMotion && !saveData && !videoFailed && (pageVisible || videoStarted)}
       {#key defaultWallpaper.video}
-        <video class="wallpaper-image wallpaper-video" class:mobile-video={mobileWallpaper} src={defaultWallpaper.video} poster={defaultWallpaper.poster} autoplay muted loop playsinline preload="auto" onerror={() => { videoFailed = true; }}></video>
+        <video use:videoAction class="wallpaper-image wallpaper-video" class:video-ready={videoPlaying} class:mobile-video={mobileWallpaper} src={defaultWallpaper.video} muted loop playsinline preload="auto"></video>
       {/key}
     {/if}
     <div class="wallpaper-shade"></div>
@@ -217,7 +300,7 @@
       </div>
       <p class="eyebrow">Welcome to Dcelysion</p>
       <h1>{data.profile.name}</h1>
-      <p class="bio"><span class="sr-only">{data.profile.bio}</span><span aria-hidden="true" class="bio-stage"><span class="bio-placeholder">{data.profile.bio}</span><span class="bio-text">{typedBio}<span class:typing={typedBio !== data.profile.bio} class="typing-caret"></span></span></span></p>
+      <p class="bio"><span class="sr-only">{data.profile.bio}</span><span aria-hidden="true" class="bio-stage"><span class="bio-placeholder">{data.profile.bio}</span><span class="bio-text">{typedBio}<span class:typing={!reducedMotion} class="typing-caret"></span></span></span></p>
       <div class="identity-divider" aria-hidden="true"><span></span><i></i><span></span></div>
       <nav class="socials" aria-label="社交链接">
         {#each data.socials as social}
@@ -249,7 +332,7 @@
       <div class="panel-heading"><div><p class="panel-eyebrow">{activePanel === 'weather' ? 'A LITTLE FORECAST' : 'SOUNDTRACK OF THE MOMENT'}</p><h2 id="panel-title">{activePanel === 'weather' ? '此刻的天气' : '音乐时光'}</h2></div><button class="icon-button close-button" onclick={closePanel} aria-label="关闭面板"><Icon name="close" /></button></div>
 
       {#if activePanel === 'weather'}
-        <div class="greeting-overview"><strong>{greeting.text}</strong>{#if greeting.time}<span>{greeting.time}<small>设备时间</small></span>{/if}</div>
+        <div class="greeting-overview"><strong>{greeting.text}</strong>{#if greeting.time}<span>{greeting.time}</span>{/if}</div>
         <div class="weather-overview" aria-live="polite">
           {#if weather}
             <div class="weather-location"><Icon name="pin" size={15} /><span>{weather.city}</span>{#if selectedCity}<small>手动选择</small>{/if}</div>
@@ -267,11 +350,13 @@
         <p class="location-note">按网络出口估算城市，可能与实际位置不同。</p>
       {:else}
         <div class="now-playing"><img class="album-cover" src={track?.cover} alt={track ? `${track.name} 封面` : '专辑封面'} width="104" height="104" /><div class="track-meta"><span class="track-status"><i class:active={music?.playing}></i>{music?.loading ? '加载中' : music?.playing ? '正在播放' : '等待播放'}</span><h3>{track?.name ?? '暂无歌曲'}</h3><p>{track?.artist}</p></div></div>
+        {#if musicLoading}<div class="notice" role="status">播放器加载中</div>{/if}
+        {#if musicError}<div class="notice" role="status">{musicError}<button onclick={() => ensureMusicPlayer()}>重试</button></div>{/if}
         {#if music?.error}<div class="notice" role="status">{music.error}<button onclick={() => player?.retry()}>重试</button></div>{/if}
         <div class="progress-control"><label class="sr-only" for="music-progress">播放进度</label><input id="music-progress" type="range" min="0" max={music?.duration || 1} step="0.1" value={music?.currentTime ?? 0} disabled={!music?.duration} oninput={(event) => player?.seek(Number(event.currentTarget.value))} /><div class="time-labels"><span>{formatTime(music?.currentTime ?? 0)}</span><span>{formatTime(music?.duration ?? 0)}</span></div></div>
-        <div class="playback-controls"><button class="icon-button mode-button" onclick={() => player?.cycleMode()} aria-label={`播放模式：${modeLabel}，点击切换`} title={modeLabel}><Icon name={music?.mode === 'random' ? 'shuffle' : 'repeat'} size={19} />{#if music?.mode === 'one'}<span class="single-badge">1</span>{/if}</button><button class="icon-button" onclick={() => player?.previous()} aria-label="上一首"><Icon name="previous" size={22} /></button><button class="play-button" onclick={() => player?.toggle()} aria-label={music?.playing ? '暂停' : '播放'}><Icon name={music?.playing ? 'pause' : 'play'} size={27} /></button><button class="icon-button" onclick={() => player?.next()} aria-label="下一首"><Icon name="next" size={22} /></button><button class="icon-button" class:active-control={showPlaylist} onclick={() => { showPlaylist = !showPlaylist; }} aria-label="歌单" aria-expanded={showPlaylist} aria-controls="playlist"><Icon name="list" size={20} /></button></div>
-        <div class="volume-control"><Icon name="volume" size={16} /><label class="sr-only" for="music-volume">音量</label><input id="music-volume" type="range" min="0" max="1" step="0.01" value={music?.volume ?? 0.7} oninput={(event) => player?.setVolume(Number(event.currentTarget.value))} /><span>{Math.round((music?.volume ?? 0.7) * 100)}%</span></div>
-        {#if showPlaylist}<div class="playlist" id="playlist"><div class="playlist-heading"><span>我的歌单</span><span>{data.tracks.length} 首</span></div>{#each data.tracks as item, index}<button class="playlist-track" class:selected={music?.index === index} onclick={() => player?.select(index)} aria-label={`播放 ${item.name}`} aria-current={music?.index === index ? 'true' : undefined}><span class="track-number">{String(index + 1).padStart(2, '0')}</span><span><strong>{item.name}</strong><small>{item.artist}</small></span>{#if music?.index === index}<Icon name="music" size={15} />{/if}</button>{/each}</div>{/if}
+        <div class="playback-controls"><button class="icon-button mode-button" disabled={!player} onclick={() => player?.cycleMode()} aria-label={`播放模式：${modeLabel}，点击切换`} title={modeLabel}><Icon name={music?.mode === 'random' ? 'shuffle' : 'repeat'} size={19} />{#if music?.mode === 'one'}<span class="single-badge">1</span>{/if}</button><button class="icon-button" disabled={!player} onclick={() => player?.previous()} aria-label="上一首"><Icon name="previous" size={22} /></button><button class="play-button" disabled={!player} onclick={() => player?.toggle()} aria-label={music?.playing ? '暂停' : '播放'}><Icon name={music?.playing ? 'pause' : 'play'} size={27} /></button><button class="icon-button" disabled={!player} onclick={() => player?.next()} aria-label="下一首"><Icon name="next" size={22} /></button><button class="icon-button" class:active-control={showPlaylist} onclick={() => { showPlaylist = !showPlaylist; }} aria-label="歌单" aria-expanded={showPlaylist} aria-controls="playlist"><Icon name="list" size={20} /></button></div>
+        <div class="volume-control"><Icon name="volume" size={16} /><label class="sr-only" for="music-volume">音量</label><input id="music-volume" disabled={!player} type="range" min="0" max="1" step="0.01" value={music?.volume ?? 0.7} oninput={(event) => player?.setVolume(Number(event.currentTarget.value))} /><span>{Math.round((music?.volume ?? 0.7) * 100)}%</span></div>
+        {#if showPlaylist}<div class="playlist" id="playlist"><div class="playlist-heading"><span>我的歌单</span><span>{data.tracks.length} 首</span></div>{#each data.tracks as item, index}<button class="playlist-track" class:selected={music?.index === index} disabled={!player} onclick={() => player?.select(index)} aria-label={`播放 ${item.name}`} aria-current={music?.index === index ? 'true' : undefined}><span class="track-number">{String(index + 1).padStart(2, '0')}</span><span><strong>{item.name}</strong><small>{item.artist}</small></span>{#if music?.index === index}<Icon name="music" size={15} />{/if}</button>{/each}</div>{/if}
         <p class="music-note">{modeLabel} · {data.tracks.length} 首收藏 · 点下播放，听见好心情</p>
       {/if}
     </section>
