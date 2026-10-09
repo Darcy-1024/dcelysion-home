@@ -294,14 +294,19 @@
     </header>
 
     <main class="identity">
+      <div class="identity-heading">
       <div class="avatar-orbit" tabindex="0" role="img" aria-label={`${data.profile.name} 的头像`}>
         <span class="avatar-wave" aria-hidden="true"></span><span class="avatar-wave" aria-hidden="true"></span><span class="avatar-wave" aria-hidden="true"></span>
         <div class="avatar-ring"><img class="avatar" src={data.profile.avatar} alt="" width="150" height="150" fetchpriority="high" /></div><span class="orbit-dot"></span>
       </div>
+      <div class="identity-name">
       <p class="eyebrow">Welcome to Dcelysion</p>
       <h1>{data.profile.name}</h1>
+      </div>
+      </div>
       <p class="bio"><span class="sr-only">{data.profile.bio}</span><span aria-hidden="true" class="bio-stage"><span class="bio-placeholder">{data.profile.bio}</span><span class="bio-text">{typedBio}<span class:typing={!reducedMotion} class="typing-caret"></span></span></span></p>
       <div class="identity-divider" aria-hidden="true"><span></span><i></i><span></span></div>
+      <div class="identity-actions">
       <nav class="socials" aria-label="社交链接">
         {#each data.socials as social}
           <a class="social-link glass" href={social.url ?? '#email'} onclick={(event) => emailClick(event, social)} target={social.encodedEmail ? undefined : '_blank'} rel={social.encodedEmail ? undefined : 'noopener noreferrer'} aria-label={social.name === 'Email' ? '发送邮件' : social.name === 'Bilibili' ? '哔哩哔哩（新标签页）' : 'QQ（新标签页）'} title={social.name === 'Email' ? '邮箱' : social.name === 'Bilibili' ? 'B站' : 'QQ'}>
@@ -310,6 +315,7 @@
         {/each}
       </nav>
       <a class="blog-link glass" href={data.blogUrl} target="_blank" rel="noopener noreferrer"><span>进入博客</span><Icon name="arrow" size={19} /></a>
+      </div>
     </main>
 
     <footer class="bottom-bar">
@@ -319,8 +325,8 @@
         </button>
         <p class="wallpaper-notice" role="status">{wallpaperNotice}</p>
       </div>
-      <button class="music-trigger glass" onclick={(event) => openPanel('music', event)} aria-haspopup="dialog" aria-expanded={activePanel === 'music'} aria-controls="home-panel">
-        <span class="music-trigger-symbol" class:is-playing={music?.playing} aria-hidden="true">{#if music?.playing}<i></i><i></i><i></i><i></i>{:else}<Icon name="music" size={20} />{/if}</span>
+      <button class="music-trigger glass" class:is-playing={music?.playing} onclick={(event) => openPanel('music', event)} aria-label={music?.playing ? `正在播放：${track?.name}，打开音乐面板` : '听一首歌，打开音乐面板'} aria-haspopup="dialog" aria-expanded={activePanel === 'music'} aria-controls="home-panel">
+        <span class="music-trigger-symbol" aria-hidden="true"><span class="music-trigger-note"><Icon name="music" size={20} /></span>{#if music?.playing}<i></i><i></i><i></i><i></i>{/if}</span>
         <span class="music-trigger-copy"><span>{music?.playing ? track?.name : '听一首歌'}</span><small>{music?.playing ? track?.artist : '让旋律陪你片刻'}</small></span><Icon name="chevron" size={15} />
       </button>
     </footer>
@@ -332,12 +338,10 @@
       <div class="panel-heading"><div><p class="panel-eyebrow">{activePanel === 'weather' ? 'A LITTLE FORECAST' : 'SOUNDTRACK OF THE MOMENT'}</p><h2 id="panel-title">{activePanel === 'weather' ? '此刻的天气' : '音乐时光'}</h2></div><button class="icon-button close-button" onclick={closePanel} aria-label="关闭面板"><Icon name="close" /></button></div>
 
       {#if activePanel === 'weather'}
-        <div class="greeting-overview"><strong>{greeting.text}</strong>{#if greeting.time}<span>{greeting.time}</span>{/if}</div>
         <div class="weather-overview" aria-live="polite">
           {#if weather}
-            <div class="weather-location"><Icon name="pin" size={15} /><span>{weather.city}</span>{#if selectedCity}<small>手动选择</small>{/if}</div>
-            <div class="temperature-row"><span class="temperature">{weather.temperature}<sup>°</sup></span><span class="weather-large-icon" aria-hidden="true">{weatherSymbol(weather.description)}</span></div>
-            <p class="weather-description">{weather.description}</p>
+            <div class="weather-location"><Icon name="pin" size={15} /><span>{weather.city}</span>{#if greeting.time}<span class="weather-time" title="设备时间">· {greeting.time}</span>{/if}{#if selectedCity}<small>手动选择</small>{/if}</div>
+            <div class="temperature-row"><div class="weather-current"><span class="temperature">{weather.temperature}<sup>°</sup></span><p class="weather-description">{weather.description}</p></div><span class="weather-large-icon" aria-hidden="true">{weatherSymbol(weather.description)}</span></div>
             <div class="weather-details"><div><Icon name="drop" size={17} /><span>湿度</span><strong>{weather.humidity}%</strong></div><div><Icon name="wind" size={17} /><span>{weather.windDirection}</span><strong>{weather.windPower}</strong></div></div>
             <p class="updated-at">更新于 {weather.updatedAt}</p>
           {:else}<div class="weather-empty"><Icon name="sun" size={44} /><p>{weatherBusy ? '正在看看窗外的天气…' : '暂时没有天气数据'}</p></div>{/if}
