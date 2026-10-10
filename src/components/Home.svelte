@@ -283,9 +283,9 @@
 
   <div class="home-surface" inert={activePanel !== null}>
     <header class="topbar">
-      <a class="wordmark" href={data.blogUrl} target="_blank" rel="noopener noreferrer" aria-label="DcElysion 博客（新标签页）">
+      <div class="wordmark">
         <img src={data.logo} alt="DcElysion" fetchpriority="high" />
-      </a>
+      </div>
       <button class="weather-trigger glass" onclick={(event) => openPanel('weather', event)} aria-haspopup="dialog" aria-expanded={activePanel === 'weather'} aria-controls="home-panel">
         <span class="weather-trigger-icon" aria-hidden="true">{weather ? weatherSymbol(weather.description) : '☁'}</span>
         <span class="weather-trigger-copy"><span class="weather-greeting">{greeting.text}</span><span class="weather-trigger-summary">{weather ? `${weather.city} · ${weather.temperature}°` : weatherBusy ? '正在获取天气' : '查看天气'}</span></span>
@@ -314,7 +314,8 @@
           </a>
         {/each}
       </nav>
-      <a class="blog-link glass" href={data.blogUrl} target="_blank" rel="noopener noreferrer"><span>进入博客</span><Icon name="arrow" size={19} /></a>
+      <!-- 暂时隐藏博客入口，恢复时取消下方注释。 -->
+      <!-- <a class="blog-link glass" href={data.blogUrl} target="_blank" rel="noopener noreferrer"><span>进入博客</span><Icon name="arrow" size={19} /></a> -->
       </div>
     </main>
 
@@ -329,6 +330,7 @@
         <span class="music-trigger-symbol" aria-hidden="true"><span class="music-trigger-note"><Icon name="music" size={20} /></span>{#if music?.playing}<i></i><i></i><i></i><i></i>{/if}</span>
         <span class="music-trigger-copy"><span>{music?.playing ? track?.name : '听一首歌'}</span><small>{music?.playing ? track?.artist : '让旋律陪你片刻'}</small></span><Icon name="chevron" size={15} />
       </button>
+      <a class="icp-record" href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">粤ICP备2026151958号</a>
     </footer>
   </div>
 

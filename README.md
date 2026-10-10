@@ -21,7 +21,7 @@ corepack pnpm build
 corepack pnpm preview --port 4323
 ```
 
-生产产物是 `dist/` 中的纯静态文件。部署使用 Cloudflare Workers 静态资源，域名为 `https://home.dcelysion.cn`。
+生产产物是 `dist/` 中的纯静态文件。部署使用 Cloudflare Workers 静态资源，主域名为 `https://dcelysion.cn`，同时保留 `https://home.dcelysion.cn` 作为兼容入口。
 
 ## 部署
 

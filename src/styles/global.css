@@ -66,7 +66,9 @@ h1 { font-family: 'LXGW WenKai', 'MiSans VF', 'Microsoft YaHei', sans-serif; fon
 .blog-link { display: flex; justify-content: center; align-items: center; gap: 32px; margin-top: 27px; height: 47px; min-width: 185px; padding: 0 26px; border-radius: 28px; font-size: 13px; letter-spacing: .13em; background: rgba(237,209,239,.14); border-color: rgba(247,221,252,.18); }
 .blog-link:hover { background: rgba(238,206,245,.26); border-color: rgba(247,221,252,.3); transform: translateY(-2px); }
 .blog-link svg { color: var(--accent-bright); }
-.bottom-bar { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
+.bottom-bar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px; }
+.icp-record { flex-basis: 100%; text-align: center; font-size: 12px; line-height: 1.6; color: var(--muted); text-shadow: 0 1px 4px #0008; }
+.icp-record:hover { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
 .wallpaper-control { position: relative; }
 .wallpaper-trigger { display: flex; align-items: center; gap: 10px; height: 43px; padding: 0 17px; border-radius: 24px; font-size: 12px; color: rgba(255,255,255,.9); }
 .wallpaper-trigger > span:first-child { display: block; }

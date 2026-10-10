@@ -7,6 +7,10 @@
   },
   "routes": [
     {
+      "pattern": "dcelysion.cn",
+      "custom_domain": true
+    },
+    {
       "pattern": "home.dcelysion.cn",
       "custom_domain": true
     }
