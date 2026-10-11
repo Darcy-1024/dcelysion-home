@@ -7,8 +7,13 @@
   import type { MusicPlayer, MusicState } from '../lib/music';
   import { afterLoadIdle, backgroundAllowed, WallpaperCandidate, attachVideo } from '../lib/media';
   import { GreetingClock, type Greeting } from '../lib/greeting';
+  import { blogHref, getBlogRouter, type BlogRouter, type BlogRouteState } from '../lib/blog-route';
 
   let { data, icons }: { data: HomeData; icons: Record<string, IconData> } = $props();
+  let blogRouter: BlogRouter | undefined;
+  let blogRoute = $state<BlogRouteState | undefined>();
+  const blogUrl = $derived(blogHref(blogRoute?.source ?? 'cloudflare'));
+  const blogChoice = $derived(blogRoute?.mode === 'manual' ? blogRoute.source : 'auto');
   let activePanel = $state<'weather' | 'music' | null>(null);
   let panelElement: HTMLElement;
   let returnFocus: HTMLElement | null = null;
@@ -184,6 +189,8 @@
 
   onMount(() => {
     alive = true;
+    blogRouter = getBlogRouter();
+    const unsubscribeBlog = blogRouter.mount(state => { blogRoute = state; });
     mounted = true;
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const mobile = window.matchMedia('(max-width: 640px)');
@@ -247,6 +254,7 @@
     document.addEventListener('visibilitychange', onVisible);
     return () => {
       alive = false;
+      unsubscribeBlog();
       wallpaperVersion++;
       weatherVersion++;
       weatherController?.abort();
@@ -314,8 +322,18 @@
           </a>
         {/each}
       </nav>
-      <!-- 暂时隐藏博客入口，恢复时取消下方注释。 -->
-      <!-- <a class="blog-link glass" href={data.blogUrl} target="_blank" rel="noopener noreferrer"><span>进入博客</span><Icon name="arrow" size={19} /></a> -->
+      <!-- BLOG_ENTRY_START：入口与控件继续隐藏；恢复整个注释块并在 lib/blog-route.ts 启用 BLOG_ROUTE_ENABLED。 -->
+      <!--
+      <a class="blog-link glass" href={blogUrl} target="_blank" rel="noopener noreferrer"><span>进入博客</span><Icon name="arrow" size={19} /></a>
+      <div class="blog-route-controls" role="group" aria-label="博客线路">
+        <button type="button" aria-pressed={blogChoice === 'auto'} onclick={() => blogRouter?.select('auto')}>自动</button>
+        <button type="button" aria-pressed={blogChoice === 'cloudflare'} onclick={() => blogRouter?.select('cloudflare')}>Cloudflare</button>
+        <button type="button" aria-pressed={blogChoice === 'edgeone'} onclick={() => blogRouter?.select('edgeone')}>EdgeOne</button>
+        <button type="button" onclick={() => void blogRouter?.retest()}>重新测速</button>
+        <span role="status">{blogRoute?.status === 'pending' ? '正在选择线路' : blogRoute?.source === 'edgeone' ? '当前线路：EdgeOne' : '当前线路：Cloudflare'}</span>
+      </div>
+      -->
+      <!-- BLOG_ENTRY_END -->
       </div>
     </main>
 
