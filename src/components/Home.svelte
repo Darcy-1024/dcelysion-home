@@ -348,7 +348,7 @@
         <span class="music-trigger-symbol" aria-hidden="true"><span class="music-trigger-note"><Icon name="music" size={20} /></span>{#if music?.playing}<i></i><i></i><i></i><i></i>{/if}</span>
         <span class="music-trigger-copy"><span>{music?.playing ? track?.name : '听一首歌'}</span><small>{music?.playing ? track?.artist : '让旋律陪你片刻'}</small></span><Icon name="chevron" size={15} />
       </button>
-      <a class="icp-record" href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">粤ICP备2026151958号</a>
+      <a class="icp-record" href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">粤ICP备2026151958号-1</a>
     </footer>
   </div>
 
