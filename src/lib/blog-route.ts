@@ -1,5 +1,5 @@
 // This switch is deliberately independent of media routing and entry visibility.
-export const BLOG_ROUTE_ENABLED = false;
+export const BLOG_ROUTE_ENABLED = true;
 export const BLOG_ROUTE_KEY = 'dcelysion.blog-route.v1';
 export const BLOG_ROUTE_VERSION = 'probe-v1-32k-policy-v1';
 export const BLOG_ORIGINS = {

@@ -291,9 +291,9 @@
 
   <div class="home-surface" inert={activePanel !== null}>
     <header class="topbar">
-      <div class="wordmark">
+      <a class="wordmark" href={blogUrl} target="_blank" rel="noopener noreferrer" aria-label="DcElysion 博客（新标签页）">
         <img src={data.logo} alt="DcElysion" fetchpriority="high" />
-      </div>
+      </a>
       <button class="weather-trigger glass" onclick={(event) => openPanel('weather', event)} aria-haspopup="dialog" aria-expanded={activePanel === 'weather'} aria-controls="home-panel">
         <span class="weather-trigger-icon" aria-hidden="true">{weather ? weatherSymbol(weather.description) : '☁'}</span>
         <span class="weather-trigger-copy"><span class="weather-greeting">{greeting.text}</span><span class="weather-trigger-summary">{weather ? `${weather.city} · ${weather.temperature}°` : weatherBusy ? '正在获取天气' : '查看天气'}</span></span>
@@ -322,17 +322,15 @@
           </a>
         {/each}
       </nav>
-      <!-- BLOG_ENTRY_START：入口与控件继续隐藏；恢复整个注释块并在 lib/blog-route.ts 启用 BLOG_ROUTE_ENABLED。 -->
-      <!--
+      <!-- BLOG_ENTRY_START：入口与线路控件同步启用，开关位于 lib/blog-route.ts。 -->
       <a class="blog-link glass" href={blogUrl} target="_blank" rel="noopener noreferrer"><span>进入博客</span><Icon name="arrow" size={19} /></a>
-      <div class="blog-route-controls" role="group" aria-label="博客线路">
+      <div class="blog-route-controls" role="group" aria-label="博客线路" hidden>
         <button type="button" aria-pressed={blogChoice === 'auto'} onclick={() => blogRouter?.select('auto')}>自动</button>
         <button type="button" aria-pressed={blogChoice === 'cloudflare'} onclick={() => blogRouter?.select('cloudflare')}>Cloudflare</button>
         <button type="button" aria-pressed={blogChoice === 'edgeone'} onclick={() => blogRouter?.select('edgeone')}>EdgeOne</button>
         <button type="button" onclick={() => void blogRouter?.retest()}>重新测速</button>
         <span role="status">{blogRoute?.status === 'pending' ? '正在选择线路' : blogRoute?.source === 'edgeone' ? '当前线路：EdgeOne' : '当前线路：Cloudflare'}</span>
       </div>
-      -->
       <!-- BLOG_ENTRY_END -->
       </div>
     </main>
@@ -348,8 +346,11 @@
         <span class="music-trigger-symbol" aria-hidden="true"><span class="music-trigger-note"><Icon name="music" size={20} /></span>{#if music?.playing}<i></i><i></i><i></i><i></i>{/if}</span>
         <span class="music-trigger-copy"><span>{music?.playing ? track?.name : '听一首歌'}</span><small>{music?.playing ? track?.artist : '让旋律陪你片刻'}</small></span><Icon name="chevron" size={15} />
       </button>
-      <a class="icp-record" href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">粤ICP备2026151958号-1</a>
     </footer>
+  </div>
+  <div class="icp-footer" inert={activePanel !== null}>
+    <a class="icp-record" href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">粤ICP备2026151958号-1</a>
+    <a class="icp-record public-security-record" href="https://beian.mps.gov.cn/#/query/webSearch?code=44011302006031" rel="noopener noreferrer" target="_blank"><img src="/assets/public-security-beian.png" width="14" height="16" alt="" />粤公网安备44011302006031号</a>
   </div>
 
   {#if activePanel}

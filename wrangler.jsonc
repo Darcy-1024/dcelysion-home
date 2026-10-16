@@ -13,6 +13,10 @@
     {
       "pattern": "home.dcelysion.cn",
       "custom_domain": true
+    },
+    {
+      "pattern": "www.dcelysion.cn",
+      "custom_domain": true
     }
   ]
 }
