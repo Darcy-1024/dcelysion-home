@@ -1,0 +1,231 @@
+{
+  "sourceSha256": "f315c0ea1d09d5181a745104c637fd3f3c12a81244b10c099c5180639fb71b52",
+  "characters": 22541,
+  "chunks": [
+    {
+      "file": "common-8df330b8cf09.woff2",
+      "characters": 513,
+      "bytes": 114660
+    },
+    {
+      "file": "000-0a3aff218454.woff2",
+      "characters": 512,
+      "bytes": 61480
+    },
+    {
+      "file": "001-b8494ee339d3.woff2",
+      "characters": 512,
+      "bytes": 52932
+    },
+    {
+      "file": "002-a504c35b8377.woff2",
+      "characters": 512,
+      "bytes": 97720
+    },
+    {
+      "file": "003-737ce2d43845.woff2",
+      "characters": 512,
+      "bytes": 173928
+    },
+    {
+      "file": "004-de772e832844.woff2",
+      "characters": 512,
+      "bytes": 197860
+    },
+    {
+      "file": "005-8206b5b7b487.woff2",
+      "characters": 512,
+      "bytes": 139004
+    },
+    {
+      "file": "006-4a293c7d06a6.woff2",
+      "characters": 512,
+      "bytes": 195148
+    },
+    {
+      "file": "007-500edbde0821.woff2",
+      "characters": 512,
+      "bytes": 184904
+    },
+    {
+      "file": "008-dacf2aa21c38.woff2",
+      "characters": 512,
+      "bytes": 211032
+    },
+    {
+      "file": "009-ab77735d4da1.woff2",
+      "characters": 512,
+      "bytes": 175280
+    },
+    {
+      "file": "010-eecb47ffa46b.woff2",
+      "characters": 512,
+      "bytes": 201828
+    },
+    {
+      "file": "011-07249e6ec430.woff2",
+      "characters": 512,
+      "bytes": 204452
+    },
+    {
+      "file": "012-b9c3cdff87ee.woff2",
+      "characters": 512,
+      "bytes": 223480
+    },
+    {
+      "file": "013-6f378ca37cdf.woff2",
+      "characters": 512,
+      "bytes": 246872
+    },
+    {
+      "file": "014-4689ddab5ba9.woff2",
+      "characters": 512,
+      "bytes": 184248
+    },
+    {
+      "file": "015-6326491597db.woff2",
+      "characters": 512,
+      "bytes": 193240
+    },
+    {
+      "file": "016-563083e9b795.woff2",
+      "characters": 512,
+      "bytes": 258824
+    },
+    {
+      "file": "017-9602abfd117e.woff2",
+      "characters": 512,
+      "bytes": 203544
+    },
+    {
+      "file": "018-b5c1239ca872.woff2",
+      "characters": 512,
+      "bytes": 243376
+    },
+    {
+      "file": "019-2f87da00e8da.woff2",
+      "characters": 512,
+      "bytes": 264788
+    },
+    {
+      "file": "020-05fb8edcc79f.woff2",
+      "characters": 512,
+      "bytes": 252048
+    },
+    {
+      "file": "021-fb4d7309c447.woff2",
+      "characters": 512,
+      "bytes": 204360
+    },
+    {
+      "file": "022-42944d84194a.woff2",
+      "characters": 512,
+      "bytes": 215804
+    },
+    {
+      "file": "023-8a0afac9642d.woff2",
+      "characters": 512,
+      "bytes": 212156
+    },
+    {
+      "file": "024-b543216d8d82.woff2",
+      "characters": 512,
+      "bytes": 231276
+    },
+    {
+      "file": "025-b7520e797fe7.woff2",
+      "characters": 512,
+      "bytes": 274276
+    },
+    {
+      "file": "026-787b0424d751.woff2",
+      "characters": 512,
+      "bytes": 266904
+    },
+    {
+      "file": "027-d5da1dce4071.woff2",
+      "characters": 512,
+      "bytes": 220480
+    },
+    {
+      "file": "028-d70781f73013.woff2",
+      "characters": 512,
+      "bytes": 182728
+    },
+    {
+      "file": "029-5b5f27f6ef7d.woff2",
+      "characters": 512,
+      "bytes": 203392
+    },
+    {
+      "file": "030-f32eeacb404a.woff2",
+      "characters": 512,
+      "bytes": 246492
+    },
+    {
+      "file": "031-8db26d444c09.woff2",
+      "characters": 512,
+      "bytes": 269736
+    },
+    {
+      "file": "032-75a18a0fa98a.woff2",
+      "characters": 512,
+      "bytes": 219052
+    },
+    {
+      "file": "033-faf1d3c8ef96.woff2",
+      "characters": 512,
+      "bytes": 226356
+    },
+    {
+      "file": "034-9be2724747f5.woff2",
+      "characters": 512,
+      "bytes": 221376
+    },
+    {
+      "file": "035-2e2377534783.woff2",
+      "characters": 512,
+      "bytes": 215824
+    },
+    {
+      "file": "036-86279f2269f4.woff2",
+      "characters": 512,
+      "bytes": 244880
+    },
+    {
+      "file": "037-f15a9de0073d.woff2",
+      "characters": 512,
+      "bytes": 248992
+    },
+    {
+      "file": "038-203a46116cc7.woff2",
+      "characters": 512,
+      "bytes": 210220
+    },
+    {
+      "file": "039-bf7c502a0485.woff2",
+      "characters": 512,
+      "bytes": 255116
+    },
+    {
+      "file": "040-eb9b1805d25b.woff2",
+      "characters": 512,
+      "bytes": 288424
+    },
+    {
+      "file": "041-7978f4d8cfbb.woff2",
+      "characters": 512,
+      "bytes": 304824
+    },
+    {
+      "file": "042-35006a143123.woff2",
+      "characters": 512,
+      "bytes": 307576
+    },
+    {
+      "file": "043-df3a82e3c436.woff2",
+      "characters": 12,
+      "bytes": 9512
+    }
+  ]
+}

@@ -7,6 +7,7 @@
   import type { MusicPlayer, MusicState } from '../lib/music';
   import { afterLoadIdle, backgroundAllowed, WallpaperCandidate, attachVideo } from '../lib/media';
   import { GreetingClock, type Greeting } from '../lib/greeting';
+  import { splitBio } from '../lib/text';
   import { blogHref, getBlogRouter, type BlogRouter, type BlogRouteState } from '../lib/blog-route';
 
   let { data, icons }: { data: HomeData; icons: Record<string, IconData> } = $props();
@@ -196,7 +197,7 @@
     const mobile = window.matchMedia('(max-width: 640px)');
     reducedMotion = motion.matches;
     let typeTimer: ReturnType<typeof setTimeout> | undefined;
-    const letters = Array.from(new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(data.profile.bio), ({ segment }) => segment);
+    const letters = splitBio(data.profile.bio);
     const startTyping = () => {
       clearTimeout(typeTimer);
       if (reducedMotion || !letters.length) { typedBio = data.profile.bio; return; }

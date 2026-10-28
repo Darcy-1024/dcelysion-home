@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
-import { readFile, mkdir, writeFile } from 'node:fs/promises';
+import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { resolve, extname } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -34,10 +34,13 @@ await esbuild.build({
   plugins: [{ name: 'local-blog-route-fixture', setup(build) {
     build.onLoad({ filter: /\.svelte$/ }, async ({ path }) => {
       let source = await readFile(path, 'utf8');
-      if (path.endsWith('Home.svelte')) source = source.replace(/(<!-- BLOG_ENTRY_START[^\n]*\n\s*)<!--/, '$1').replace(/-->\s*(<!-- BLOG_ENTRY_END -->)/, '$1');
+      // Expose manual controls only in this compiled fixture, never in production.
+      if (path.endsWith('Home.svelte')) {
+        assert.match(source, /class="blog-route-controls"[^>]* hidden/);
+        source = source.replace(/(class="blog-route-controls"[^>]*) hidden/, '$1');
+      }
       return { contents: compile(source, { filename: path, generate: 'client', css: 'injected' }).js.code, loader: 'js', resolveDir: resolve(path, '..') };
     });
-    build.onLoad({ filter: /blog-route\.ts$/ }, async ({ path }) => ({ contents: (await readFile(path, 'utf8')).replace('BLOG_ROUTE_ENABLED = false', 'BLOG_ROUTE_ENABLED = true'), loader: 'ts', resolveDir: resolve(path, '..') }));
   } }],
 });
 const probe = Buffer.concat(Array.from({ length: 1024 }, (_, counter) => createHash('sha256').update(`dcelysion.blog-route.probe-v1:${counter}`).digest()));
@@ -46,9 +49,10 @@ const servers = [];
 const serve = async (port, handler) => { const server = createServer(handler); servers.push(server); await new Promise(resolve => server.listen(port, '127.0.0.1', resolve)); };
 await serve(4390, async (req, res) => {
   try {
-    if (req.url === '/') { res.setHeader('Content-Type', 'text/html'); res.end('<!doctype html><html><head><link rel="stylesheet" href="/fixture.css"></head><body><div id="app"></div><script type="module" src="/fixture.js"></script></body></html>'); return; }
-    if (req.url === '/production/') { res.setHeader('Content-Type', 'text/html'); res.end(await readFile(resolve(root, 'dist/index.html'))); return; }
-    const file = req.url.startsWith('/fixture.') ? resolve(output, req.url.slice(1)) : req.url.startsWith('/_astro/') ? resolve(root, 'dist', req.url.slice(1)) : resolve(root, 'public', req.url.slice(1));
+    const pathname = new URL(req.url, 'http://127.0.0.1:4390').pathname;
+    if (pathname === '/') { res.setHeader('Content-Type', 'text/html'); res.end('<!doctype html><html><head><link rel="stylesheet" href="/fixture.css"></head><body><div id="app"></div><script type="module" src="/fixture.js"></script></body></html>'); return; }
+    if (pathname === '/production/') { res.setHeader('Content-Type', 'text/html'); res.end(await readFile(resolve(root, 'dist/index.html'))); return; }
+    const file = pathname.startsWith('/fixture.') ? resolve(output, pathname.slice(1)) : pathname.startsWith('/_astro/') ? resolve(root, 'dist', pathname.slice(1)) : resolve(root, 'public', pathname.slice(1));
     res.setHeader('Content-Type', extname(file) === '.js' ? 'text/javascript' : extname(file) === '.css' ? 'text/css' : 'application/octet-stream');
     res.end(await readFile(file));
   } catch { res.statusCode = 404; res.end(); }
@@ -119,19 +123,87 @@ try {
   assert.equal(await page.evaluate(() => JSON.parse(sessionStorage.getItem('dcelysion.blog-route.v1')).measured), false);
   assert.equal(await anchor.getAttribute('href'), 'https://blog.dcelysion.cn/');
   evidence.push('撤掉本地 CORS 头后浏览器双失败降级 CF');
-  const production = await context.newPage(); let productionProbes = 0;
-  production.on('request', req => { if (req.url().includes('/__route/')) productionProbes++; });
+  const production = await context.newPage(); const productionProbes = [];
+  const fontResponses = [];
+  production.on('response', response => {
+    if (new URL(response.url()).pathname.endsWith('.woff2')) fontResponses.push(response.body().then(body => ({ url: response.url(), status: response.status(), bytes: body.length })));
+  });
+  production.on('pageerror', error => errors.push(error.message));
+  await production.route('https://**/*', async route => {
+    const url = new URL(route.request().url());
+    if (['blog.dcelysion.cn', 'blog-eo.dcelysion.cn'].includes(url.hostname) && url.pathname === '/__route/probe-v1.bin') {
+      productionProbes.push(url.href);
+      await new Promise(resolve => setTimeout(resolve, url.hostname === 'blog.dcelysion.cn' ? 650 : 300));
+      return route.fulfill({ status: 200, headers: { 'Content-Type': 'application/octet-stream', 'Content-Length': String(probe.length), 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'Content-Length, Content-Encoding' }, body: probe });
+    }
+    return route.abort();
+  });
   await production.goto('http://127.0.0.1:4390/production/');
   await production.waitForFunction(() => document.querySelector('astro-island') && !document.querySelector('astro-island').hasAttribute('ssr'));
-  await production.waitForTimeout(150);
-  assert.equal(await production.locator('a.blog-link, .blog-route-controls').count(), 0);
-  assert.equal(productionProbes, 0);
+  assert.equal(await production.locator('a.blog-link').isVisible(), true);
+  assert.equal(await production.locator('.blog-route-controls').count(), 1);
+  assert.equal(await production.locator('.blog-route-controls').isHidden(), true);
+  assert.equal(await production.locator('.blog-route-controls').getAttribute('hidden'), '');
+  await production.waitForFunction(() => document.querySelector('a.blog-link')?.getAttribute('href') === 'https://blog-eo.dcelysion.cn/');
+  assert.deepEqual(productionProbes.sort(), ['https://blog-eo.dcelysion.cn/__route/probe-v1.bin', 'https://blog.dcelysion.cn/__route/probe-v1.bin'].sort());
   const html = await readFile(resolve(root, 'dist/index.html'), 'utf8');
   assert.ok(!html.includes('fixture.js'));
+  assert.ok(!html.includes('127.0.0.1:439'));
+  for (const file of await readdir(resolve(root, 'dist/_astro'))) {
+    if (!file.endsWith('.js')) continue;
+    const chunk = await readFile(resolve(root, 'dist/_astro', file), 'utf8');
+    assert.ok(!chunk.includes('127.0.0.1:439') && !chunk.includes('fixture.js'), `fixture leaked into ${file}`);
+  }
+  await production.evaluate(() => document.fonts.ready);
+  const fonts = await Promise.all(fontResponses);
+  assert.ok(fonts.every(font => font.status === 200 && font.bytes > 0), 'all requested fonts should load successfully');
+  assert.ok(!fonts.some(font => font.url.endsWith('/MiSansVF.woff2')));
+  assert.ok(fonts.some(font => /common[^/]*\.woff2/.test(font.url)), 'production should load the common MiSans subset');
+  await production.setViewportSize({ width: 1440, height: 900 });
+  await production.screenshot({ path: resolve(output, 'production-desktop.png'), fullPage: true });
+  await production.setViewportSize({ width: 390, height: 844 });
+  await production.screenshot({ path: resolve(output, 'production-mobile.png'), fullPage: true });
+  // U+6F90 belongs to a non-common subset; exercise dynamic text loading too.
+  const loadedFaces = await production.evaluate(async () => {
+    const span = document.createElement('span');
+    span.textContent = '\u6f90';
+    span.style.fontFamily = '"MiSans VF"';
+    document.body.append(span);
+    const faces = await document.fonts.load('400 20px "MiSans VF"', span.textContent);
+    await document.fonts.ready;
+    span.remove();
+    return faces.length;
+  });
+  const baselineFontUrls = new Set(fonts.map(font => font.url));
+  const onDemandFonts = (await Promise.all(fontResponses)).filter(font => !baselineFontUrls.has(font.url));
+  assert.ok(loadedFaces > 0 && onDemandFonts.some(font => /\/misans\/\d{3}-[^/]+\.woff2/.test(font.url) && font.bytes > 0), 'dynamic text should load an additional MiSans subset');
+  const bio = JSON.parse(await readFile(resolve(root, 'src/data/home.json'), 'utf8')).profile.bio;
+  const fallback = await context.newPage();
+  fallback.on('pageerror', error => errors.push(error.message));
+  await fallback.addInitScript(() => {
+    Object.defineProperty(Intl, 'Segmenter', { configurable: true, value: undefined });
+    localStorage.removeItem('dcelysion-home:weather:selected-city');
+    localStorage.setItem('dcelysion-home:weather:auto', JSON.stringify({ savedAt: Date.now(), data: { city: '测试城市', description: '晴', temperature: 25, humidity: 50, windDirection: '东风', windPower: '1级', updatedAt: '本地夹具' } }));
+  });
+  await fallback.goto('http://127.0.0.1:4390/production/');
+  await fallback.waitForFunction(() => document.querySelector('astro-island') && !document.querySelector('astro-island').hasAttribute('ssr'));
+  assert.equal(await fallback.locator('.bio-text').textContent(), bio);
+  // Both start after bio initialization in onMount: cached weather selection and clock.
+  await fallback.waitForFunction(() => localStorage.getItem('dcelysion-home:weather:selected-city') !== null);
+  await fallback.locator('.weather-trigger').click();
+  assert.match(await fallback.locator('.weather-time').textContent(), /\d{2}:\d{2}/);
+  await fallback.locator('#weather-city').fill('广州');
+  await fallback.locator('.city-submit').click();
+  await fallback.waitForFunction(() => localStorage.getItem('dcelysion-home:weather:selected-city') === '广州');
+  await fallback.getByRole('button', { name: '关闭面板', exact: true }).last().click();
+  await fallback.emulateMedia({ reducedMotion: 'no-preference' });
+  await fallback.waitForFunction(expected => document.querySelector('.bio-text')?.textContent !== expected, bio);
+  await fallback.waitForFunction(expected => document.querySelector('.bio-text')?.textContent === expected, bio, { timeout: Math.max(10000, Array.from(bio).length * 200) });
   assert.equal(errors.length, 0, errors.join('\n'));
-  evidence.push('正式 dist 完成 hydration：入口/控件不存在、无 probe 请求、无夹具引用');
+  evidence.push('正式 dist 完成 hydration：入口可见、控件隐藏，自动发起两个被拦截探针并选择 EO，无真实生产请求、无夹具引用');
+  evidence.push('正式 dist 缺少 Intl.Segmenter：bio 完整，天气初始化与城市选择继续工作，动态切换动效后打字仍能显示全文');
   await page.screenshot({ path: resolve(output, 'fixture.png'), fullPage: true });
-  await writeFile(resolve(output, 'browser-result.json'), JSON.stringify({ localFixture: true, liveProductionProbe: false, evidence, cfRequests, eoRequests, errors }, null, 2));
+  await writeFile(resolve(output, 'browser-result.json'), JSON.stringify({ localFixture: true, liveProductionProbe: false, evidence, cfRequests, eoRequests, productionProbes, fonts, fontBytes: fonts.reduce((sum, font) => sum + font.bytes, 0), onDemandFonts, errors }, null, 2));
   console.log(JSON.stringify({ passed: evidence, output }, null, 2));
 } finally {
   await browser?.close();

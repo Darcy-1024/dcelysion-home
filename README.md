@@ -53,7 +53,8 @@ corepack pnpm sync:blog -- F:\DcElysion-blog
 
 - 首屏默认播放 Elysia 动态壁纸，按 640px 断点选择横屏或竖屏视频；加载失败、禁止自动播放或减少动态效果时保留同一视频的静态海报。视频在挂载确定屏宽后立即请求并尝试播放，不等待海报、页面 load 或空闲。随机图库在 load 后空闲准备当前端一个固定候选，视频首次缓冲或 waiting/stalled 时推迟；点击复用同一加载/解码任务，成功后才准备下一张。隐藏或省流时不开始后台预取，主动换图正常；失败保留背景且不循环重试。
 - 头像带三层波纹，悬停、键盘聚焦和触屏按压时上浮；减少动态效果时关闭波纹与上浮。
-- 界面正文沿用博客 MiSans VF，主页名称用霞鹜文楷 Regular；字体以本地 WOFF2 加载。文楷已更新至官方 [v1.530](https://github.com/lxgw/LxgwWenKai/releases/tag/v1.530)，由该版本 Regular TTF 生成，保留原子集及当前名称、简介的字符；修改名称时需更新该字体子集，未包含字符回退到 MiSans。字体 URL 的版本参数用于更新浏览器缓存。
+- 界面正文沿用博客 MiSans VF，主页名称用霞鹜文楷 Regular；字体以本地 WOFF2 加载。MiSans 按 `unicode-range` 分为常用包和其余字符包，保留原字体的 22,541 个字符及 150–700 可变字重，天气城市、新歌名按需加载对应包；常用包约 112 KiB，不再整包下载 8.46 MiB。文件名带内容哈希。文楷已更新至官方 [v1.530](https://github.com/lxgw/LxgwWenKai/releases/tag/v1.530)，由该版本 Regular TTF 生成，保留原子集及当前名称、简介的字符；修改名称时需更新该字体子集，未包含字符回退到 MiSans。文楷字体 URL 的版本参数用于更新浏览器缓存。
+- 壁纸保留原始像素、分辨率和文件内容，不做缩小或有损重编码。随机图库继续使用已有的按需加载/单候选预取策略；大图的网络成本仍然存在。
 - 天气直接从访客浏览器请求 UAPI，未指定城市时按网络出口 IP 估算；无需精确位置权限。手动城市和自动定位各自缓存 30 分钟，失败显示旧缓存或重试状态，请求 8 秒超时。网络代理可能影响城市判断。
 - 天气依赖第三方服务当前的匿名访问及跨域策略，限流或网络故障不会影响主页和音乐。更换供应商只需修改 `src/lib/weather.ts`。
 - 天气胶囊同时显示问候，天气面板显示对应的当前时间。问候使用设备时区，与访客系统时钟一致，手动天气城市不改变它：05:00–08:59 早上好、09:00–10:59 上午好、11:00–12:59 中午好、13:00–16:59 下午好、17:00–18:59 傍晚好，其余为晚上好。
@@ -65,6 +66,21 @@ corepack pnpm sync:blog -- F:\DcElysion-blog
 - 界面没有登录、数据库或密钥。不会主动弹出位置权限请求。
 
 本地缓存和偏好使用 `dcelysion-home:` 前缀；浏览器禁用存储时功能仍可使用，只是不记忆偏好。
+
+## 字体与验收维护
+
+MiSans 原文件保存在 `resources/fonts/MiSansVF.woff2`，不进入 `dist/`；生成文件为 `public/assets/fonts/misans/` 和 `src/styles/misans.css`。本站使用小米 MiSans 字体，官方许可随站点保存在 `public/assets/fonts/MiSans-License.pdf`，版权名称记录保留在各分包中；见[官方说明](https://hyperos.mi.com/font/en/faq/)。
+
+普通安装、构建和博客同步不需要 Python。更新 MiSans 原文件或需要把新增页面文字归入常用包时，在 Python 环境执行：
+
+```powershell
+python -m pip install -r scripts/font-requirements.txt
+python scripts/split-font.py
+```
+
+生成脚本检查全部字符覆盖、分包不重叠及可变字重轴一致。即使暂时不重生成，新文字也可从其余包加载。所有分包总计约 8.93 MiB，比原整包略大；收益来自浏览器只下载实际用到的包，不是缩减字体字符或字形质量。
+
+浏览器回归先运行 `build`，再设置 `BLOG_ROUTE_BROWSER_RUNTIME` 为已安装、包含 Playwright 的运行时目录，执行 `node scripts/verify-blog-route-browser.mjs`。脚本使用本地服务和 Edge，测试时显式显示线路控件；正式构建应为博客入口可见、线路控件隐藏且自动测速开启。真实线上探针、天气和媒体请求均被拦截，结果不是线上服务验收。另验证缺少 `Intl.Segmenter` 时简介、天气和时钟仍能初始化，并保存桌面/手机截图和字体响应字节记录到 `.validation/blog-route-b/`。
 
 ## 验证
 
