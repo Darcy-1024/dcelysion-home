@@ -10,10 +10,9 @@
 - 项目没有 `.github` 自动部署链；Git 推送与 Cloudflare 发布分开完成。
 - 既有 Wrangler 4.127.1 上传本地静态 `dist`：`versions upload --message '04f3821: disabled blog routing stage C' --keep-vars`。上传2个变化文件，68个资源已存在。
 - 使用已连接的 Cloudflare 官方 MCP 创建正式 deployment，并读回最新 deployment 确认100%流量。没有修改 DNS、域名绑定、兼容日期或订阅。
-- Worker：`dcelysion-home`；account：`25d4e6f2e01c0cde639588a28d13814d`。
+- Worker：`dcelysion-home`。
 - Version：`2907a3cf-e72b-457c-97e5-c3dcec7b44fb`（version 6）；deployment：`717844c5-05d8-4e19-9ac7-fbfd15325976`。
 - 正式部署时间：`2026-10-11T14:49:59.219543Z`（北京时间22:49:59）。deployment annotation 引用完整源码提交；该 version 为100%流量。
-- 自动审批最初拒绝推送，核实仓库为当前账号拥有 ADMIN 权限的私有仓库、读取协调对话后仍要求本对话直接授权。用户在本对话明确回复“授权推送和正式部署”后，推送与正式部署成功；没有剩余授权阻断。
 
 ## 两主页域线上验收
 

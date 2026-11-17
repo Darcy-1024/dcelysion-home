@@ -52,7 +52,7 @@
 node --import tsx --test src/lib/blog-route.test.ts
 & .\node_modules\.bin\astro.cmd check
 & .\node_modules\.bin\astro.cmd build
-$env:BLOG_ROUTE_BROWSER_RUNTIME = 'C:\Users\Darcy\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\node_modules'
+$env:BLOG_ROUTE_BROWSER_RUNTIME = '<已安装的 Playwright 运行时目录>'
 node scripts/verify-blog-route-browser.mjs
 git diff --check
 ```

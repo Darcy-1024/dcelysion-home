@@ -1,105 +1,118 @@
+<div align="center">
+
+<img src="public/assets/brand/dcelysion-portal-v3-dark.png" alt="DcElysion" width="260" />
+
 # DcElysion Home
 
-独立个人主页，使用 Astro + Svelte + TypeScript。博客源码仅用于显式同步资料，日常开发与构建不依赖博客目录。
+**东方未晞的个人主页 · 唯有那份炫目，未曾忘却**
+
+一张会流动的壁纸，一首陪伴此刻的音乐，一个通往博客与日常的小小入口。
+
+[访问主页](https://dcelysion.cn/) · [阅读博客](https://blog.dcelysion.cn/) · [开发与维护](docs/development.md)
+
+![Astro](https://img.shields.io/badge/Astro-静态站点-BC52EE?logo=astro&logoColor=white)
+![Svelte](https://img.shields.io/badge/Svelte-交互组件-FF3E00?logo=svelte&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-类型支持-3178C6?logo=typescript&logoColor=white)
+![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?logo=cloudflare&logoColor=white)
+
+</div>
+
+![DcElysion 桌面主页](docs/images/home-desktop.webp)
+
+## 在这里，可以做什么
+
+| | 体验 |
+| --- | --- |
+| 🌸 沉浸式首页 | 全屏动态壁纸、半透明玻璃面板、波纹头像和逐字简介，搭配 MiSans 与霞鹜文楷。 |
+| 🖼️ 换个风景 | 一键切换随机壁纸，桌面与手机分别使用适合横屏、竖屏的图库。 |
+| 🎵 听一首歌 | 打开歌单，选择曲目、拖动进度、调整音量；支持列表循环、随机播放和单曲循环。 |
+| 🌤️ 看看天气 | 查看天气、温度、湿度和风况；支持手动查城市，问候与时钟跟随设备时间。 |
+| ✨ 认识站长 | 个人介绍、QQ、邮箱、哔哩哔哩和博客入口，集中在一页。 |
+| 📱 随手打开 | 桌面与手机自适应布局，移动端面板从底部展开。 |
+
+## 音乐，让页面多一点陪伴
+
+播放器按需加载，不会自动播放。打开歌单即可选曲，收起面板后仍可继续聆听；音量与播放模式会记住上一次的偏好。
+
+![音乐面板与歌单](docs/images/music-desktop.webp)
+
+## 天气与此刻
+
+天气面板支持自动估算城市，也可以手动查询。问候与时钟使用设备时间，切换天气城市不会改变它们。
+
+![天气面板：手动查询北京](docs/images/weather-desktop.webp)
+
+## 小屏幕，也有完整的体验
+
+竖屏壁纸、紧凑的个人卡片和底部音乐面板，让手机上也能轻松浏览、换图与选歌。
+
+<p align="center">
+  <img src="docs/images/home-mobile.webp" alt="手机端主页" width="320" />
+  &nbsp;
+  <img src="docs/images/music-mobile.webp" alt="手机端音乐面板" width="320" />
+</p>
+
+> 截图来自 2026-11-17 的在线页面。天气、时钟与动态壁纸会随访问时刻变化；天气示例使用手动查询的北京。
+
+## 实现上的小细节
+
+- **独立的静态站点**：Astro 构建页面，Svelte 负责交互，不需要登录系统、数据库或自建后端。日常开发不依赖博客仓库。
+- **按需加载**：音乐模块延迟加载，字体按字符范围分包；媒体预取考虑页面可见性与省流偏好。
+- **稳妥的降级**：动态壁纸无法播放时显示海报；天气请求失败时保留可用缓存或提供重试，不阻断其他功能。
+- **键盘与动效支持**：面板支持 Esc 关闭、焦点返回与 Tab 焦点限制，响应减少动态效果偏好。
+- **博客线路选择**：为博客入口探测候选线路，失败时保留默认地址；不自动跳转页面。
 
 ## 本地运行
 
-需要 Node.js >= 22.23.0、Corepack，项目固定使用 pnpm 11.22.0。
+需要 **Node.js ≥ 22.23.0** 与 Corepack；包管理器版本固定为 **pnpm 11.22.0**。
 
-```powershell
-cd F:\DcElysion-home
-corepack pnpm install
+```sh
+git clone https://github.com/Darcy-1024/dcelysion-home.git
+cd dcelysion-home
+corepack pnpm install --frozen-lockfile
 corepack pnpm dev --port 4322
 ```
 
-浏览器访问 http://127.0.0.1:4322/ 。
+打开 [localhost:4322](http://localhost:4322/)。
 
-```powershell
-corepack pnpm check
-corepack pnpm test
-corepack pnpm build
-corepack pnpm preview --port 4323
+| 命令 | 用途 |
+| --- | --- |
+| `corepack pnpm check` | Astro 与 TypeScript 检查 |
+| `corepack pnpm test` | 天气、音乐、媒体与博客选路等专项测试 |
+| `corepack pnpm build` | 生成 `dist/` 静态文件 |
+| `corepack pnpm preview --port 4323` | 预览构建结果 |
+
+## 换成自己的主页
+
+主要内容集中在 [`src/data/home.json`](src/data/home.json)，可修改显示名、简介、头像、社交链接、博客地址、壁纸和歌单。
+
+```text
+src/
+├── components/       页面与交互组件
+├── data/home.json    个人资料、壁纸与音乐配置
+├── lib/              天气、音乐、媒体加载、问候与博客选路
+├── pages/            Astro 页面入口
+└── styles/           全局样式与字体分包声明
+public/assets/        图片、字体、品牌与海报资源
+scripts/              资料同步、字体处理与浏览器验证
+docs/                 开发说明与历史记录
 ```
 
-生产产物是 `dist/` 中的纯静态文件。部署使用 Cloudflare Workers 静态资源，主域名为 `https://dcelysion.cn`，同时保留 `https://home.dcelysion.cn` 作为兼容入口。
+复用时请替换个人联系方式、品牌图片、备案信息、媒体地址及博客线路配置，并使用自己有权发布的素材。名称使用的文楷为字体子集，增加字符时请参考[字体维护说明](docs/development.md#字体与验收维护)。
 
-## 部署
+### 部署
 
-独立 GitHub 仓库：`Darcy-1024/dcelysion-home`。Wrangler 版本固定在项目依赖中，发布配置见 `wrangler.jsonc`。
+产物为 `dist/`，可托管到支持静态文件的平台。本项目使用 Cloudflare Workers 静态资源：先将 [`wrangler.jsonc`](wrangler.jsonc) 中的 Worker 名称和域名改为自己的配置，再登录并部署。
 
-```powershell
-corepack pnpm install --frozen-lockfile
+```sh
+corepack pnpm exec wrangler login
 corepack pnpm deploy
 ```
 
-发布前需登录正确的 Cloudflare 账号（`corepack pnpm exec wrangler login`）。部署命令先构建，再上传 `dist/` 并绑定自定义域名；Git 推送与线上部署是独立步骤。
+域名及静态站点地址还需同步调整 [`astro.config.mjs`](astro.config.mjs)。Git 推送与线上部署是独立步骤。博客资料同步、媒体加载策略、浏览器回归与历史验证见[开发与维护指南](docs/development.md)。
 
-若在 Cloudflare 控制台连接仓库启用 Workers Builds，生产分支使用 `main`，构建命令使用 `corepack pnpm build`，部署命令使用 `corepack pnpm exec wrangler deploy`。
+## 数据与素材说明
 
-## 更新博客资料
+天气由访客浏览器请求第三方服务，自动城市按网络出口 IP 估算，不请求设备精确位置权限。音频、封面和动态壁纸会请求配置的媒体域名；可用性与加载速度取决于对应服务和网络。邮箱的 Base64 编码仅用于展示处理，不是加密。
 
-```powershell
-corepack pnpm sync:blog -- F:\DcElysion-blog
-```
-
-脚本只读取博客中明确配置的个人资料、QQ/邮箱/B站、站点地址、随机图片清单、favicon、音乐清单和主题色；不执行博客的配置代码，也不会更改博客。先校验全部输入，再覆盖独立项目中对应资源，不删除旧文件。
-
-- `src/data/home.json`：可单独维护的资料快照；再次同步保留主页显示名、Logo 和默认动态壁纸，其余博客资料会覆盖。
-- `public/assets/blog/`：56 张已配置随机图片和头像的本地副本；favicon 也来自博客。
-- 歌单、曲目顺序、封面与音频地址沿用博客，音频仍从现有媒体域加载；不会复制音频文件。
-- 邮箱以 Base64 编码保存并在点击时解码。编码用于避免页面直接展示明文，不是加密或访问控制。
-
-## 行为与维护
-
-- 首屏默认播放 Elysia 动态壁纸，按 640px 断点选择横屏或竖屏视频；加载失败、禁止自动播放或减少动态效果时保留同一视频的静态海报。视频在挂载确定屏宽后立即请求并尝试播放，不等待海报、页面 load 或空闲。随机图库在 load 后空闲准备当前端一个固定候选，视频首次缓冲或 waiting/stalled 时推迟；点击复用同一加载/解码任务，成功后才准备下一张。隐藏或省流时不开始后台预取，主动换图正常；失败保留背景且不循环重试。
-- 头像带三层波纹，悬停、键盘聚焦和触屏按压时上浮；减少动态效果时关闭波纹与上浮。
-- 界面正文沿用博客 MiSans VF，主页名称用霞鹜文楷 Regular；字体以本地 WOFF2 加载。MiSans 按 `unicode-range` 分为常用包和其余字符包，保留原字体的 22,541 个字符及 150–700 可变字重，天气城市、新歌名按需加载对应包；常用包约 112 KiB，不再整包下载 8.46 MiB。文件名带内容哈希。文楷已更新至官方 [v1.530](https://github.com/lxgw/LxgwWenKai/releases/tag/v1.530)，由该版本 Regular TTF 生成，保留原子集及当前名称、简介的字符；修改名称时需更新该字体子集，未包含字符回退到 MiSans。文楷字体 URL 的版本参数用于更新浏览器缓存。
-- 壁纸保留原始像素、分辨率和文件内容，不做缩小或有损重编码。随机图库继续使用已有的按需加载/单候选预取策略；大图的网络成本仍然存在。
-- 天气直接从访客浏览器请求 UAPI，未指定城市时按网络出口 IP 估算；无需精确位置权限。手动城市和自动定位各自缓存 30 分钟，失败显示旧缓存或重试状态，请求 8 秒超时。网络代理可能影响城市判断。
-- 天气依赖第三方服务当前的匿名访问及跨域策略，限流或网络故障不会影响主页和音乐。更换供应商只需修改 `src/lib/weather.ts`。
-- 天气胶囊同时显示问候，天气面板显示对应的当前时间。问候使用设备时区，与访客系统时钟一致，手动天气城市不改变它：05:00–08:59 早上好、09:00–10:59 上午好、11:00–12:59 中午好、13:00–16:59 下午好、17:00–18:59 傍晚好，其余为晚上好。
-- 问候和面板时钟使用设备时间，不再请求 IP 时区服务，也不读取旧的 IP 时区缓存；网络代理不会改变时间。静态首屏为“你好”，浏览器初始化后显示“设备时间”。
-- 问候使用 `Intl` 计算设备时区的当地时间及夏令时，每分钟更新显示；返回页面时立即更新并重新读取设备时区。禁用存储仍可使用，组件卸载会清理计时器。
-- 音乐模块在页面 load 后空闲或首次打开面板（取先发生者）动态加载，共用一个播放器。普通可见网络后台预载首曲和封面，但绝不自动播放；省流或隐藏时停止发起后台预取，主动操作正常。关闭面板继续播放，音量和模式只保存偏好，不恢复历史播放。
-- 播放至少 5 秒、剩余不超过 20 秒时，预取下一首及封面，每轮最多一个备用音频。列表顺序循环，随机固定候选供切歌复用，单曲循环复用当前资源。预取不影响当前播放，切歌直接复用备用加载；后台失败静默，主动播放失败可重试。preload=auto 可能下载完整 FLAC，数量上限不是字节上限，不承诺无缝切歌。
-- 天气和音乐面板互斥，支持 Esc、点击背景关闭、焦点返回与 Tab 焦点限制。手机面板位于底部，过高内容可以滚动。
-- 界面没有登录、数据库或密钥。不会主动弹出位置权限请求。
-
-本地缓存和偏好使用 `dcelysion-home:` 前缀；浏览器禁用存储时功能仍可使用，只是不记忆偏好。
-
-## 字体与验收维护
-
-MiSans 原文件保存在 `resources/fonts/MiSansVF.woff2`，不进入 `dist/`；生成文件为 `public/assets/fonts/misans/` 和 `src/styles/misans.css`。本站使用小米 MiSans 字体，官方许可随站点保存在 `public/assets/fonts/MiSans-License.pdf`，版权名称记录保留在各分包中；见[官方说明](https://hyperos.mi.com/font/en/faq/)。
-
-普通安装、构建和博客同步不需要 Python。更新 MiSans 原文件或需要把新增页面文字归入常用包时，在 Python 环境执行：
-
-```powershell
-python -m pip install -r scripts/font-requirements.txt
-python scripts/split-font.py
-```
-
-生成脚本检查全部字符覆盖、分包不重叠及可变字重轴一致。即使暂时不重生成，新文字也可从其余包加载。所有分包总计约 8.93 MiB，比原整包略大；收益来自浏览器只下载实际用到的包，不是缩减字体字符或字形质量。
-
-浏览器回归先运行 `build`，再设置 `BLOG_ROUTE_BROWSER_RUNTIME` 为已安装、包含 Playwright 的运行时目录，执行 `node scripts/verify-blog-route-browser.mjs`。脚本使用本地服务和 Edge，测试时显式显示线路控件；正式构建应为博客入口可见、线路控件隐藏且自动测速开启。真实线上探针、天气和媒体请求均被拦截，结果不是线上服务验收。另验证缺少 `Intl.Segmenter` 时简介、天气和时钟仍能初始化，并保存桌面/手机截图和字体响应字节记录到 `.validation/blog-route-b/`。
-
-## 验证
-
-天气与音乐状态机的专项测试位于 `src/lib/*.test.ts`。它们使用模拟网络、时钟或音频，不会修改生产数据。
-
-初版交付验证（2026-10-08，保留原记录）：
-
-- Astro 检查：0 errors / 0 warnings / 0 hints；生产静态构建通过。
-- 天气 8 项、音乐 8 项专项测试通过，覆盖超时、缓存隔离、存储失败、播放竞态、媒体错误及循环模式。
-- 浏览器检查：1280×720 桌面与 390×844 手机布局无横向溢出；随机壁纸已加载、手动切换后图片不同，手机使用移动图库。
-- 真实天气自动城市、手动查询北京、恢复自动定位可用；真实音乐已验证播放、歌单选曲、音量、进度及收起面板后继续播放。
-- 面板互斥、Esc 关闭、Tab 焦点限制、焦点返回通过。减少动态效果样式已实现，尚未切换系统偏好做实机验证。
-- QQ、邮箱、B站目标与博客配置一致；没有发送邮件或启动外部 QQ 客户端。
-
-此验证不代表已上线；没有提交、推送、部署或绑定域名。
-
-问候 IP 时区功能历史验证（2026-10-08，已由设备时间替代）：
-
-- `corepack pnpm check`：0 errors / 0 warnings / 0 hints；`corepack pnpm build` 通过。
-- `corepack pnpm test`：25 项通过，其中问候 9 项覆盖六段边界、跨时区与夏令时、非法数据、缓存过期、禁用存储、8 秒取消、请求竞态及失败回退。
-- Edge 浏览器真实请求 ipapi.co 时区端点返回 HTTP 200，跨域头匹配本地页面；页面显示返回的 `America/Los_Angeles` 时区时间。
-- 1280×720、390×844、320×700 页面无横向溢出，问候完整、天气面板在视口内；320px 和 390px 宽度下长城市名称省略，问候完整。模拟天气查询北京后问候时区保持不变；模拟时区请求失败显示设备时间。手动城市独立性及失败场景使用模拟网络，本次未重复初版真实天气与音乐验收。
+MiSans 与霞鹜文楷的许可文件随资源保留。图片、头像、壁纸、音乐和其他第三方素材的权利属于各自权利人；仓库公开不表示这些素材获准自由再分发或商用。本仓库尚未设置统一的开源许可证，公开可见不等于授予任意使用许可。详见[素材与许可说明](docs/ASSETS.md)。
