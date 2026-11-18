@@ -142,3 +142,7 @@ h2 { font-size: 18px; font-weight: 500; letter-spacing: .08em; margin: 0; }
 
 .wallpaper-video { opacity: 0; transition: opacity .35s; }
 .wallpaper-video.video-ready { opacity: 1; }
+
+/* §8.4: missing artwork keeps the existing cover dimensions. */
+.cover-fallback { display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; gap: 8px; color: var(--accent); }
+.cover-fallback span { font-size: 11px; color: var(--muted); }

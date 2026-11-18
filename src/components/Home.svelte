@@ -2,6 +2,7 @@
   import { onMount, tick } from 'svelte';
   import { fade } from 'svelte/transition';
   import Icon from './Icon.svelte';
+  import AlbumCover from './AlbumCover.svelte';
   import type { HomeData, IconData, Social } from '../lib/home';
   import { CACHE_TTL, fetchWeather, readWeatherCache, writeWeatherCache, readSelectedCity, saveSelectedCity, weatherSymbol, type Weather } from '../lib/weather';
   import type { MusicPlayer, MusicState } from '../lib/music';
@@ -375,7 +376,7 @@
         <div class="weather-panel-footer"><button class="text-button" onclick={() => loadWeather('', true)} disabled={weatherBusy}><Icon name="pin" size={14} />恢复自动定位</button><a href="https://uapis.cn" target="_blank" rel="noopener noreferrer">天气数据 · UAPI</a></div>
         <p class="location-note">按网络出口估算城市，可能与实际位置不同。</p>
       {:else}
-        <div class="now-playing"><img class="album-cover" src={track?.cover} alt={track ? `${track.name} 封面` : '专辑封面'} width="104" height="104" /><div class="track-meta"><span class="track-status"><i class:active={music?.playing}></i>{music?.loading ? '加载中' : music?.playing ? '正在播放' : '等待播放'}</span><h3>{track?.name ?? '暂无歌曲'}</h3><p>{track?.artist}</p></div></div>
+        <div class="now-playing">{#key track?.cover}<AlbumCover src={track?.cover} alt={track ? `${track.name} 封面` : '专辑封面'} />{/key}<div class="track-meta"><span class="track-status"><i class:active={music?.playing}></i>{music?.loading ? '加载中' : music?.playing ? '正在播放' : '等待播放'}</span><h3>{track?.name ?? '暂无歌曲'}</h3><p>{track?.artist}</p></div></div>
         {#if musicLoading}<div class="notice" role="status">播放器加载中</div>{/if}
         {#if musicError}<div class="notice" role="status">{musicError}<button onclick={() => ensureMusicPlayer()}>重试</button></div>{/if}
         {#if music?.error}<div class="notice" role="status">{music.error}<button onclick={() => player?.retry()}>重试</button></div>{/if}
