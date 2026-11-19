@@ -9,7 +9,7 @@
 - src/lib/music.ts / music.test.ts：首曲/封面不播放预载、20秒/5秒下一曲预取、受控备用提升、模式/错误/版本隔离。
 - src/styles/global.css：只添加视频出画面显隐规则，保留原样式编辑。
 - README.md：同步实际策略及 preload 可能完整下载 FLAC 的取舍。
-- docs/plans/2026-10-09-media-lazy-loading.md：合并追加修订，移除旧冲突策略。
+- docs/archive/plans/2026-10-09-media-lazy-loading.md：合并追加修订，移除旧冲突策略。
 
 ## 本地命令
 
@@ -30,7 +30,7 @@ corepack pnpm build：通过，纯静态输出。git diff --check：通过（仅
 - 390×844刷新：仅移动海报有 resource 标记，mobile/elysia-gate-952x1344.mp4 静音播放（readyState=4、paused=false）。移动随机候选为 MobileWallpaper/m26.avif；无桌面视频/海报 resource 标记，无横向溢出。
 - 640px仍用移动资源，641px切到桌面资源；旧视频释放。最终构建又核对了手机对应视频、首曲初始不播放和实际点击播放。
 - Shift+Tab由面板关闭按钮回到music-volume；Tab返回关闭按钮。Esc/关闭后背景恢复交互与入口焦点。
-- 最终手机播放截图：docs/media-preview-mobile.png。
+- 最终手机播放截图：docs/archive/media-preview-mobile.png。
 
 ## 证据限制
 
